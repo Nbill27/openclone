@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OpenClone</string>
+    <string name="pick_app">Pilih Aplikasi</string>
+    <string name="search_hint">Cari aplikasi...</string>
+    <string name="about">Tentang</string>
+    <string name="no_apps">Tidak ada aplikasi yang cocok.</string>
+    <string name="clone_settings">Atur Clone</string>
+    <string name="clone_name">Nama clone</string>
+    <string name="clone_package">Package clone</string>
+    <string name="clone_icon">Ikon clone</string>
+    <string name="pick_from_gallery">PILIH DARI GALERI</string>
+    <string name="remove">HAPUS</string>
+    <string name="icon_hint">Kosongkan bila ingin ikon asli tetap dipakai.</string>
+    <string name="clone_button">CLONE</string>
+    <string name="install_button">INSTALL</string>
+    <string name="share_button">BAGIKAN APK</string>
+</resources>
