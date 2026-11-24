@@ -4,146 +4,150 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Nbill27/openclone/blob/main/LICENSE)
 [![Release](https://img.shields.io/github/v/release/Nbill27/openclone)](https://github.com/Nbill27/openclone/releases)
 
-Aplikasi Android **open source** untuk meng-clone (menggandakan) aplikasi yang
-sudah terpasang, supaya satu aplikasi bisa dipakai dua akun sekaligus di satu
-HP. Tanpa iklan, tanpa akun, tanpa server. Semua proses jalan di HP.
+An **open source** Android app that clones (duplicates) an already installed
+app, so you can run two accounts of the same app on one phone. No ads, no
+account, no server. Everything runs on the device.
 
-Clone dibuat dengan menyalin APK asli, mengganti package name di manifest,
-lalu menandatangani ulang APK hasilnya dengan kunci milik OpenClone. Tidak ada
-DEX patching, tidak ada bypass signature, tidak ada root.
+A clone is produced by copying the original APK, rewriting the package name in
+the manifest, and re-signing the result with a key owned by OpenClone. There is
+no DEX patching, no signature bypass, and no root.
 
 ---
 
-## Daftar isi
+## Table of contents
 
-- [Fitur](#fitur)
-- [Syarat](#syarat)
-- [Instalasi](#instalasi)
-  - [Unduh APK rilis](#unduh-apk-rilis)
-  - [Pakai APK yang sudah ada di repo](#pakai-apk-yang-sudah-ada-di-repo)
-  - [Build sendiri](#build-sendiri)
-- [Cara pakai](#cara-pakai)
-- [Struktur proyek](#struktur-proyek)
-- [Cara kerja internal](#cara-kerja-internal)
-- [Kunci signing, baca ini dulu](#kunci-signing-baca-ini-dulu)
-- [Testing dan CI](#testing-dan-ci)
-- [Batasan](#batasan)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+  - [Download a release APK](#download-a-release-apk)
+  - [Use the APK already in the repo](#use-the-apk-already-in-the-repo)
+  - [Build it yourself](#build-it-yourself)
+- [Usage](#usage)
+- [Project layout](#project-layout)
+- [How it works](#how-it-works)
+- [Signing key: read this first](#signing-key-read-this-first)
+- [Testing and CI](#testing-and-ci)
+- [Limitations](#limitations)
 - [FAQ](#faq)
-- [Berkontribusi](#berkontribusi)
-- [Kredit](#kredit)
-- [Lisensi](#lisensi)
+- [Contributing](#contributing)
+- [Credits](#credits)
+- [License](#license)
 
 ---
 
-## Fitur
+## Features
 
-- **Pilih aplikasi** dari daftar aplikasi terpasang, lengkap dengan kolom cari.
-  Aplikasi sistem ikut tampil dan ditandai, terserah kamu mau clone atau tidak.
-- **Atur clone dalam satu layar.** Nama clone terisi otomatis (contoh:
-  `Muse 2`), package clone terisi otomatis (contoh:
-  `com.facebook.aura.klon1`, naik ke `klon2`, `klon3` kalau sudah dipakai), dan
-  ikon bisa diganti dari galeri.
-- **Split APK didukung.** Aplikasi App Bundle yang terpasang sebagai beberapa
-  APK digabung dulu sebelum di-clone.
-- **Satu kunci signing untuk semua clone**, jadi clone bisa di-update tanpa
-  uninstall dulu. Kuncinya dibuat sekali saat pertama jalan dan disimpan di HP.
-- **Riwayat clone** tersimpan di aplikasi, jadi APK clone yang sudah jadi bisa
-  di-install ulang atau dibagikan tanpa clone dari nol lagi.
-- **Daftar aplikasi tetap ringan** di HP dengan ratusan aplikasi: scan tanpa
-  ikon, ikon dimuat per baris yang terlihat, dan hasil scan di-cache sebentar.
-- **Tanpa iklan, tanpa pelacakan, tanpa internet.** Clone murni proses lokal.
+- **Pick an app** from the list of installed apps, with a search field. System
+  apps are listed and marked too; whether to clone them is up to you.
+- **Configure the clone on one screen.** The clone name is filled in
+  automatically (for example `Muse 2`), the clone package is filled in
+  automatically (for example `com.facebook.aura.klon1`, moving on to `klon2`,
+  `klon3` when already taken), and the icon can be replaced from the gallery.
+- **Split APKs are supported.** Apps installed as several APKs (App Bundle) are
+  merged first, then cloned.
+- **One signing key for every clone**, so clones can be updated without
+  uninstalling first. The key is created once on first launch and stored on the
+  device.
+- **Clone history** is kept in the app, so finished clone APKs can be
+  re-installed or shared without cloning from scratch again.
+- **The app list stays light** on phones with hundreds of apps: the scan skips
+  icons, icons load per visible row, and scan results are cached briefly.
+- **No ads, no tracking, no internet.** Cloning is a purely local process.
 
-## Syarat
+## Requirements
 
-- Android 8.0 (API 26) atau lebih baru.
-- Izin **Install unknown apps** untuk OpenClone, karena clone di-install sebagai
-  APK biasa.
-- Izin `QUERY_ALL_PACKAGES` untuk melihat daftar aplikasi terpasang.
-- Tanpa izin penyimpanan: pemilihan ikon memakai pemilih file/sistem (Storage
-  Access Framework), bukan akses ke seluruh galeri.
+- Android 8.0 (API 26) or newer.
+- **Install unknown apps** permission for OpenClone, because clones are
+  installed as regular APKs.
+- `QUERY_ALL_PACKAGES` permission to see the list of installed apps.
+- No storage permission: icon picking goes through the system file picker
+  (Storage Access Framework), not full gallery access.
 
-## Instalasi
+## Installation
 
-### Unduh APK rilis
+### Download a release APK
 
-1. Buka halaman [Releases](https://github.com/Nbill27/openclone/releases).
-2. Unduh APK dari rilis terbaru.
-3. Buka file APK-nya di HP, izinkan **Install unknown apps** saat diminta, lalu
-   tap **Install**.
+1. Open the [Releases](https://github.com/Nbill27/openclone/releases) page.
+2. Download the APK from the latest release.
+3. Open the APK file on your phone, allow **Install unknown apps** when asked,
+   then tap **Install**.
 
-Lewat ADB, kalau HP sudah tersambung dan USB debugging aktif:
+Via ADB, if the phone is connected and USB debugging is on:
 
 ```bash
 adb install -r OpenClone-0.1.0-debug.apk
 ```
 
-### Pakai APK yang sudah ada di repo
+### Use the APK already in the repo
 
-Folder [`apk/`](apk/) berisi APK yang sudah dibangun, jadi kamu tidak perlu
-memasang toolchain Android sama sekali:
+The [`apk/`](apk/) folder contains a prebuilt APK, so you do not need an Android
+toolchain at all:
 
 ```bash
 git clone https://github.com/Nbill27/openclone.git
 cd openclone/apk
 ```
 
-Kirim `OpenClone-0.1.0-debug.apk` ke HP lalu install seperti biasa. Versi,
-ukuran, dan checksum tiap file dicatat di [`apk/README.md`](apk/README.md).
+Transfer `OpenClone-0.1.0-debug.apk` to your phone and install it as usual.
+Version, size, and checksum of each file are recorded in
+[`apk/README.md`](apk/README.md).
 
-### Build sendiri
+### Build it yourself
 
-Butuh:
+You need:
 
-- JDK 17 (JDK 21+ belum didukung AGP 8.4.2)
-- Android SDK dengan platform 34 dan build-tools 34.0.0
-- Koneksi internet pada build pertama, untuk mengunduh Gradle dan dependensi
+- JDK 17 (JDK 21+ is not supported by AGP 8.4.2 yet)
+- Android SDK with platform 34 and build-tools 34.0.0
+- An internet connection on the first build, to download Gradle and the
+  dependencies
 
 ```bash
 git clone https://github.com/Nbill27/openclone.git
 cd openclone
 ./gradlew assembleDebug
-# APK ada di app/build/outputs/apk/debug/app-debug.apk
+# APK is at app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Di Windows:
+On Windows:
 
 ```powershell
 gradlew.bat assembleDebug
 ```
 
-Atau buka folder ini di Android Studio (Ladybug atau lebih baru) dan tekan Run.
+Or open this folder in Android Studio (Ladybug or newer) and press Run.
 
-Kalau Gradle tidak menemukan SDK, set `ANDROID_HOME` (atau
-`ANDROID_SDK_ROOT`), atau buat `local.properties` berisi:
+If Gradle cannot find the SDK, set `ANDROID_HOME` (or `ANDROID_SDK_ROOT`), or
+create `local.properties` containing:
 
 ```properties
-sdk.dir=C\:\\Users\\NAMA\\AppData\\Local\\Android\\Sdk
+sdk.dir=C\:\\Users\\NAME\\AppData\\Local\\Android\\Sdk
 ```
 
-`local.properties` sudah masuk `.gitignore`, jangan di-commit.
+`local.properties` is already in `.gitignore`; do not commit it.
 
-Untuk build rilis yang ditandatangani kunci sendiri, tambahkan `signingConfigs`
-di `app/build.gradle.kts` dan pakai `./gradlew assembleRelease`. Build rilis dari
-CI memakai debug key agar APK di halaman Releases bisa langsung dipasang.
+For a release build signed with your own key, add `signingConfigs` to
+`app/build.gradle.kts` and use `./gradlew assembleRelease`. CI release builds
+use the debug key so the APK on the Releases page can be installed directly.
 
-## Cara pakai
+## Usage
 
-Tiga langkah, tiga layar.
+Three steps, three screens.
 
-1. **Pilih Aplikasi.** Buka OpenClone, cari aplikasi di daftar, tap.
-2. **Atur Clone.** Nama dan package clone sudah terisi otomatis. Kalau mau,
-   ganti ikon dari galeri; kalau dikosongkan, ikon asli dipakai. Pastikan
-   package clone belum dipakai aplikasi lain.
-3. **Tap CLONE**, tunggu sampai selesai, lalu tap **INSTALL**.
+1. **Pick an app.** Open OpenClone, find the app in the list, tap it.
+2. **Configure the clone.** The clone name and package are already filled in.
+   Optionally replace the icon from the gallery; leave it empty to keep the
+   original icon. Make sure the clone package is not already used by another
+   app.
+3. **Tap CLONE**, wait for it to finish, then tap **INSTALL**.
 
-Clone yang sudah jadi tersimpan di penyimpanan internal aplikasi
-(`files/clones/<package>.apk`) dan bisa di-install ulang atau dibagikan dari
-layar hasil.
+Finished clones are stored in the app's internal storage
+(`files/clones/<package>.apk`) and can be re-installed or shared from the result
+screen.
 
-## Struktur proyek
+## Project layout
 
-Proyek ini satu modul Android (`:app`), tanpa library internal, supaya mudah
-dibaca dari atas ke bawah.
+This is a single-module Android project (`:app`) with no internal libraries, so
+it can be read top to bottom.
 
 ```
 openclone/
@@ -151,8 +155,8 @@ openclone/
 │   └── workflows/
 │       └── build.yml              # CI: unit test → lint → assemble → artifact/release
 ├── app/
-│   ├── build.gradle.kts           # Konfigurasi modul: SDK, dependensi, viewBinding
-│   ├── proguard-rules.pro         # Aturan R8 (saat ini minify dimatikan)
+│   ├── build.gradle.kts           # Module config: SDK, dependencies, viewBinding
+│   ├── proguard-rules.pro         # R8 rules (minify is currently disabled)
 │   └── src/
 │       ├── main/
 │       │   ├── AndroidManifest.xml
@@ -173,307 +177,316 @@ openclone/
 │       │       ├── values/        # strings, colors, themes
 │       │       ├── xml/           # file_paths.xml (FileProvider)
 │       │       ├── drawable-xxxhdpi/  # foreground + monochrome adaptive icon
-│       │       └── mipmap-*/      # ikon launcher legacy + round, semua densitas
+│       │       └── mipmap-*/      # legacy + round launcher icons, all densities
 │       └── test/java/dev/bill/openclone/
 │           ├── CloneConfigTest.kt
 │           └── ManifestNamingTest.kt
 ├── apk/
-│   ├── OpenClone-0.1.0-debug.apk  # APK siap install
-│   └── README.md                  # Versi, checksum, cara install
+│   ├── OpenClone-0.1.0-debug.apk  # ready-to-install APK
+│   └── README.md                  # version, checksum, install steps
 ├── gradle/wrapper/                # Gradle 8.7 wrapper
-├── build.gradle.kts               # Versi plugin AGP 8.4.2 + Kotlin 1.9.24
-├── settings.gradle.kts            # Nama proyek, repositori, modul :app
-├── gradle.properties              # Heap Gradle, AndroidX, gaya Kotlin
+├── build.gradle.kts               # AGP 8.4.2 + Kotlin 1.9.24 plugin versions
+├── settings.gradle.kts            # Project name, repositories, :app module
+├── gradle.properties              # Gradle heap, AndroidX, Kotlin style
 ├── gradlew / gradlew.bat          # Gradle wrapper
 ├── LICENSE                        # MIT
 └── README.md
 ```
 
-### Penjelasan tiap file sumber
+### What each source file does
 
-| File | Tanggung jawab |
+| File | Responsibility |
 | --- | --- |
-| `MainActivity.kt` | Layar 1, "Pilih Aplikasi". Memuat daftar di `onResume`, memfilter saat mengetik, membuka layar clone. |
-| `CloneActivity.kt` | Layar 2 dan 3, "Atur Clone" dan hasil. Menjalankan clone di coroutine, menampilkan progres, memasang APK lewat `PackageInstaller` (fallback `ACTION_VIEW`), membagikan APK, dan memulihkan state setelah rotasi. |
-| `CloneEngine.kt` | Inti pekerjaan: salin APK/split, gabung dengan ARSCLib, ganti package name, ganti label, ganti ikon, buang signature lama, paksa `resources.arsc` STORED, tulis APK, tanda tangani v1/v2/v3. Satu fungsi `suspend` dengan checkpoint pembatalan. |
-| `CloneConfig.kt` | Model data (`CloneConfig`, `CloneResult`, `CloneRecord`) plus helper murni: saran nama/package clone, validasi package name. |
-| `CloneStore.kt` | Riwayat clone sebagai satu file JSON di private storage. Akses diserialkan dengan lock process-wide, tulisan atomik lewat file `.tmp` lalu rename. |
-| `KeystoreManager.kt` | Membuat dan memuat kunci signing (PKCS12) di `files/openclone-keystore.p12`, dengan password acak di `SharedPreferences` privat. |
-| `AppRepository.kt` | Scan aplikasi terpasang: satu `getInstalledPackages` bulk untuk versi, filter `sourceDir` null, cache 15 detik, `invalidate()` setelah install sukses. |
-| `AppIcons.kt` | Cache ikon lazy per baris. Drawable dirasterisasi ke bitmap kecil, disimpan di `LruCache` berbatas 8 MB. |
-| `AppListAdapter.kt` | RecyclerView adapter dengan `DiffUtil` (identity `packageName@sourceDir`), ikon dimuat saat bind. |
-| `InstalledApp.kt` | Model satu aplikasi terpasang, tanpa `Drawable`, dengan `lowerLabel`/`searchKey` lazy untuk filter. |
-| `ManifestNaming.kt` | Aturan teks murni untuk rename manifest: permission yang dideklarasikan, `authorities` provider, `android:permission`, `android:process`. Dipisah supaya bisa diuji tanpa APK. |
+| `MainActivity.kt` | Screen 1, "Pick an app". Loads the list in `onResume`, filters as you type, opens the clone screen. |
+| `CloneActivity.kt` | Screens 2 and 3, "Configure clone" and the result. Runs the clone in a coroutine, shows progress, installs the APK through `PackageInstaller` (falling back to `ACTION_VIEW`), shares the APK, and restores state after rotation. |
+| `CloneEngine.kt` | The core work: copy APK/splits, merge with ARSCLib, rewrite the package name, rewrite the label, replace the icon, strip old signatures, force `resources.arsc` to STORED, write the APK, sign v1/v2/v3. A single `suspend` function with cancellation checkpoints. |
+| `CloneConfig.kt` | Data models (`CloneConfig`, `CloneResult`, `CloneRecord`) plus pure helpers: clone name/package suggestions, package name validation. |
+| `CloneStore.kt` | Clone history as a single JSON file in private storage. Access is serialized with a process-wide lock, writes are atomic through a `.tmp` file then rename. |
+| `KeystoreManager.kt` | Creates and loads the signing key (PKCS12) at `files/openclone-keystore.p12`, with a random password in private `SharedPreferences`. |
+| `AppRepository.kt` | Scans installed apps: one bulk `getInstalledPackages` for versions, filters null `sourceDir`, caches for 15 seconds, `invalidate()` after a successful install. |
+| `AppIcons.kt` | Lazy per-row icon cache. Drawables are rasterized into small bitmaps and kept in an `LruCache` capped at 8 MB. |
+| `AppListAdapter.kt` | RecyclerView adapter with `DiffUtil` (identity `packageName@sourceDir`); icons load on bind. |
+| `InstalledApp.kt` | Model for one installed app, without `Drawable`, with lazy `lowerLabel`/`searchKey` for filtering. |
+| `ManifestNaming.kt` | Pure text rules for manifest renaming: declared permissions, provider `authorities`, `android:permission`, `android:process`. Split out so it can be tested without an APK. |
 
-### Penjelasan resource
+### What each resource does
 
-| Path | Isi |
+| Path | Contents |
 | --- | --- |
-| `res/layout/activity_main.xml` | Judul, tombol Tentang, kolom cari, daftar aplikasi. |
-| `res/layout/activity_clone.xml` | Ikon, nama clone, package clone, pemilih ikon, tombol CLONE/INSTALL/BAGIKAN. |
-| `res/layout/item_app.xml` | Satu baris daftar: ikon 48dp, nama, package, metadata versi. |
-| `res/values/strings.xml` | Semua teks UI (Bahasa Indonesia). Tambah string baru di sini, jangan hardcode di layout. |
-| `res/values/colors.xml` | `openclone_blue` dan `ic_launcher_background`. |
-| `res/values/themes.xml` | Tema Material 3 DayNight tanpa ActionBar. |
-| `res/xml/file_paths.xml` | Path yang boleh dibagikan lewat FileProvider (`clones/` dan cache). |
-| `res/mipmap-anydpi-v26/` | Adaptive icon XML untuk API 26+. |
-| `res/mipmap-*dpi/` | Ikon legacy dan round untuk tiap densitas. |
-| `res/drawable-xxxhdpi/` | Foreground dan monochrome adaptive icon (raster tunggal). |
+| `res/layout/activity_main.xml` | Title, About button, search field, app list. |
+| `res/layout/activity_clone.xml` | Icon, clone name, clone package, icon picker, CLONE/INSTALL/SHARE buttons. |
+| `res/layout/item_app.xml` | One list row: 48dp icon, name, package, version metadata. |
+| `res/values/strings.xml` | All UI text (Indonesian). Add new strings here, never hardcode them in layouts. |
+| `res/values/colors.xml` | `openclone_blue` and `ic_launcher_background`. |
+| `res/values/themes.xml` | Material 3 DayNight theme without an ActionBar. |
+| `res/xml/file_paths.xml` | Paths that may be shared through FileProvider (`clones/` and cache). |
+| `res/mipmap-anydpi-v26/` | Adaptive icon XML for API 26+. |
+| `res/mipmap-*dpi/` | Legacy and round icons for each density. |
+| `res/drawable-xxxhdpi/` | Foreground and monochrome adaptive icon (single raster). |
 
-## Cara kerja internal
+## How it works
 
-Tidak ada API Android untuk "jalankan aplikasi dua kali". Triknya adalah
-membuat aplikasi kedua yang menurut Android benar-benar berbeda.
+Android has no API to "run an app twice". The trick is to build a second app
+that Android considers genuinely different.
 
-### Pipeline clone
+### Clone pipeline
 
-`CloneEngine.clone()` berjalan berurutan, dengan `ensureActive()` sebelum tiap
-langkah berat:
+`CloneEngine.clone()` runs sequentially, calling `ensureActive()` before every
+heavy step:
 
-1. **Salin** `ApplicationInfo.sourceDir` (dan semua split) ke cache dir.
-2. **Muat** APK dengan `ApkModule`/`ApkBundle`; split digabung jadi satu modul,
-   APK tunggal dimuat langsung.
-3. **Ganti package name** lewat `setPackageName`, lalu `ManifestNaming`
-   merapikan identifier yang wajib unik per aplikasi:
-   - `<permission>` / `<permission-tree>` / `<permission-group>` yang memakai
-     package lama di-rename, termasuk deklarasinya di `uses-permission`.
-   - `authorities` provider dipecah per `;`; yang sudah di bawah package baru
-     dibiarkan, yang masih package lama di-swap prefix-nya, dan nama telanjang
-     (mis. `com.facebook.appmanager`) diberi namespace package baru.
-   - `android:permission` dan `android:process` pada komponen ikut disesuaikan.
-   - Nama kelas komponen **tidak pernah** di-rename.
-4. **Ganti label** aplikasi.
-5. **Ganti ikon** kalau user memilih gambar: decode, crop center, tulis ulang
-   entry ikon launcher di dalam APK.
-6. **Buang signature lama** secara selektif: `META-INF/*.SF`, `*.RSA`, `*.DSA`,
-   `*.EC`, `MANIFEST.MF`, `SIG-*`. `META-INF/services` dan `*.kotlin_module`
-   tetap ada karena dibutuhkan ServiceLoader dan Kotlin.
-7. **Paksa `resources.arsc` STORED** (`isUncompressed = true`). Android 11+
-   menolak `resources.arsc` yang terkompresi atau tidak selaras.
-8. **Tulis APK** ke file sementara.
-9. **Tanda tangani** v1 + v2 + v3 dengan apksig, ke file `.tmp`.
-10. **Publish atomik**: rename `.tmp` menjadi `<package>.apk` final.
+1. **Copy** `ApplicationInfo.sourceDir` (and all splits) into the cache dir.
+2. **Load** the APK with `ApkModule`/`ApkBundle`; splits are merged into one
+   module, a single APK is loaded directly.
+3. **Rewrite the package name** through `setPackageName`, then `ManifestNaming`
+   cleans up identifiers that must be unique per app:
+   - `<permission>` / `<permission-tree>` / `<permission-group>` entries that
+     use the old package are renamed, including their `uses-permission`
+     declarations.
+   - Provider `authorities` are split on `;`; ones already under the new package
+     are left alone, ones still on the old package get their prefix swapped, and
+     bare names (for example `com.facebook.appmanager`) are given the new
+     package namespace.
+   - `android:permission` and `android:process` on components are adjusted too.
+   - Component class names are **never** renamed.
+4. **Rewrite the label.**
+5. **Replace the icon** when the user picked an image: decode, center-crop,
+   rewrite the launcher icon entry inside the APK.
+6. **Strip old signatures** selectively: `META-INF/*.SF`, `*.RSA`, `*.DSA`,
+   `*.EC`, `MANIFEST.MF`, `SIG-*`. `META-INF/services` and `*.kotlin_module` are
+   kept because ServiceLoader and Kotlin need them.
+7. **Force `resources.arsc` to STORED** (`isUncompressed = true`). Android 11+
+   rejects a compressed or unaligned `resources.arsc`.
+8. **Write the APK** to a temporary file.
+9. **Sign** v1 + v2 + v3 with apksig, into a `.tmp` file.
+10. **Publish atomically**: rename `.tmp` to the final `<package>.apk`.
 
-Cleanup (`module.destroy()`, hapus work dir) selalu jalan di `finally`,
-termasuk saat coroutine dibatalkan.
+Cleanup (`module.destroy()`, removing the work dir) always runs in `finally`,
+including when the coroutine is cancelled.
 
-### Aturan coroutine dan thread
+### Coroutine and threading rules
 
-- `clone()` adalah `suspend` dan dipanggil dari satu scope di
-  `CloneActivity` (`Dispatchers.Default`, karena kerja CPU + disk).
-- Progress dikirim lewat `suspend (String) -> Unit`; callback melakukan hop ke
-  `Dispatchers.Main.immediate` sendiri, jadi tidak ada coroutine liar per baris
-  progres.
-- Semua lookup `PackageManager`, baca/tulis file, dan decode ikon terjadi di
-  `Dispatchers.IO`/`Default`, tidak pernah di main thread.
-- `CancellationException` selalu di-rethrow, tidak ditelan `catch (Exception)`.
-- Setelah scan selesai, activity mengecek `isFinishing || isDestroyed` sebelum
-  menyentuh view.
+- `clone()` is `suspend` and is called from a single scope in `CloneActivity`
+  (`Dispatchers.Default`, since the work is CPU + disk).
+- Progress is reported through a `suspend (String) -> Unit`; the callback hops to
+  `Dispatchers.Main.immediate` itself, so there is no stray coroutine per
+  progress line.
+- All `PackageManager` lookups, file reads/writes, and icon decoding happen on
+  `Dispatchers.IO`/`Default`, never on the main thread.
+- `CancellationException` is always rethrown, never swallowed by
+  `catch (Exception)`.
+- After the scan completes, the activity checks `isFinishing || isDestroyed`
+  before touching views.
 
-### Penyimpanan dan konsistensi
+### Storage and consistency
 
-- Riwayat clone (`clones.json`) ditulis lewat file `.tmp` lalu rename, dengan
-  lock process-wide, supaya dua activity tidak saling menimpa.
-- APK hasil ditandatangani ke `.tmp` lalu di-rename, supaya crash di tengah
-  signing tidak merusak clone lama.
-- Scan aplikasi di-cache 15 detik di `AppRepository`; cache di-invalidate setiap
-  install clone berhasil.
+- Clone history (`clones.json`) is written through a `.tmp` file then renamed,
+  under a process-wide lock, so two activities cannot overwrite each other.
+- Result APKs are signed into `.tmp` then renamed, so a crash mid-signing cannot
+  corrupt an existing clone.
+- The app scan is cached for 15 seconds in `AppRepository`; the cache is
+  invalidated after every successful clone install.
 
-### Performa daftar aplikasi
+### App list performance
 
-- Scan hanya membaca metadata paket (satu bulk call), tanpa `loadIcon` atau
-  `loadLabel` per paket.
-- Ikon dimuat saat baris benar-benar di-bind, dirasterisasi ke ukuran layar,
-  dan disimpan di cache berbatas byte.
-- `DiffUtil` dipakai saat daftar berubah; tidak ada `notifyDataSetChanged`.
+- The scan only reads package metadata (one bulk call), without `loadIcon` or
+  `loadLabel` per package.
+- Icons load when a row is actually bound, are rasterized to screen size, and are
+  stored in a byte-bounded cache.
+- `DiffUtil` is used when the list changes; there is no
+  `notifyDataSetChanged`.
 
-## Kunci signing, baca ini dulu
+## Signing key: read this first
 
-Sekali kunci hilang, clone yang sudah terpasang tidak bisa di-update; harus
-uninstall dan install ulang, datanya hilang.
+Once the key is lost, installed clones can no longer be updated; they must be
+uninstalled and reinstalled, losing their data.
 
-Karena itu OpenClone membuat **satu** kunci saat pertama jalan, menyimpannya di
-`files/openclone-keystore.p12` di penyimpanan privat aplikasi, dan memakai kunci
-yang sama untuk semua clone.
+That is why OpenClone creates **one** key on first launch, stores it at
+`files/openclone-keystore.p12` in the app's private storage, and uses that same
+key for every clone.
 
-**Backup file keystore itu.** Kalau kamu reinstall OpenClone atau pindah HP
-tanpa membawa keystore-nya, clone lama tidak bisa di-update lagi.
+**Back up that keystore file.** If you reinstall OpenClone or move to a new phone
+without bringing the keystore along, old clones can no longer be updated.
 
-## Testing dan CI
+## Testing and CI
 
-Unit test berjalan di JVM, tanpa device dan tanpa APK:
+Unit tests run on the JVM, with no device and no APK:
 
 ```bash
 ./gradlew testDebugUnitTest
 ```
 
-Yang diuji:
+What is covered:
 
-- `ManifestNamingTest` — aturan rename `authorities`, permission, process,
-  termasuk kasus sudah di-rename dan nama telanjang.
-- `CloneConfigTest` — saran package `klon1..n`, validasi package name, saran
-  label.
+- `ManifestNamingTest` — rename rules for `authorities`, permissions, process,
+  including already-renamed and bare-name cases.
+- `CloneConfigTest` — `klon1..n` package suggestions, package name validation,
+  label suggestions.
 
-Lint dan build:
+Lint and build:
 
 ```bash
 ./gradlew lintDebug
 ./gradlew assembleDebug
 ```
 
-GitHub Actions (`.github/workflows/build.yml`) menjalankan urutan yang sama
-untuk setiap push ke `main` dan setiap pull request:
+GitHub Actions (`.github/workflows/build.yml`) runs the same sequence for every
+push to `main` and every pull request:
 
 1. `testDebugUnitTest`
 2. `lintDebug`
 3. `assembleDebug`
-4. upload APK sebagai artifact
+4. upload the APK as an artifact
 
-Tag `v*.*.*` (contoh `v0.1.0`) memicu job release yang membuat GitHub Release
-dan melampirkan APK.
+Tags matching `v*.*.*` (for example `v0.1.0`) trigger a release job that creates
+a GitHub Release and attaches the APK.
 
-## Batasan
+## Limitations
 
-- Aplikasi yang mengecek signature-nya sendiri, memakai SafetyNet / Play
-  Integrity, atau anti-tamper (banking, game tertentu) akan menolak salinan yang
-  sudah di-sign ulang. Itu butuh patch DEX/native, di luar scope proyek ini.
-- `resources.arsc` hanya diubah package name-nya. Aplikasi yang membaca package
-  name dari resource, bukan dari `Context.getPackageName()`, bisa berperilaku
-  aneh.
-- Clone harus dipasang sebagai APK biasa, jadi HP harus mengizinkan **Install
-  unknown apps** untuk OpenClone.
-- Clone tidak bisa update lewat Play Store: package dan signature-nya berbeda.
-- Tanpa root. Semua memakai API Android publik.
-- Jangan publish hasil clone ke Play Store, dan jangan clone aplikasi untuk
-  membajak, menipu, atau melanggar lisensinya. Proyek ini untuk pemakaian
-  pribadi di HP sendiri.
+- Apps that check their own signature, use SafetyNet / Play Integrity, or have
+  anti-tamper protection (banking, some games) will reject a re-signed copy.
+  Working around that needs DEX/native patching, which is out of scope here.
+- Only the package name inside `resources.arsc` is changed. Apps that read their
+  package name from resources instead of `Context.getPackageName()` may behave
+  oddly.
+- A clone has to be installed as a regular APK, so the phone must allow
+  **Install unknown apps** for OpenClone.
+- Clones cannot be updated through the Play Store: their package and signature
+  differ.
+- No root. Everything uses public Android APIs.
+- Do not publish clones to the Play Store, and do not clone apps to pirate,
+  defraud, or violate their license. This project is for personal use on your own
+  phone.
 
 ## FAQ
 
-**Apakah OpenClone butuh root?**
-Tidak.
+**Does OpenClone need root?**
+No.
 
-**Apakah clone bisa update sendiri dari Play Store?**
-Tidak. Clone punya package dan signature berbeda. Untuk update, clone lagi versi
-baru aplikasinya, atau install ulang APK clone yang baru.
+**Can a clone update itself from the Play Store?**
+No. A clone has a different package and signature. To update, clone the new
+version of the app again, or reinstall the new clone APK.
 
-**Kenapa aplikasi X force close setelah di-clone?**
-Biasanya karena aplikasi itu mengecek signature atau mendeteksi modifikasi.
-Lihat bagian [Batasan](#batasan).
+**Why does app X force close after cloning?**
+Usually because the app checks its signature or detects modification. See
+[Limitations](#limitations).
 
-**Apakah data akun di aplikasi asli aman?**
-Ya. OpenClone hanya menyalin file APK, bukan data aplikasi. Clone mulai dari
-kondisi fresh install.
+**Is my account data in the original app safe?**
+Yes. OpenClone only copies the APK file, not app data. A clone starts as a fresh
+install.
 
-**Kenapa package clone saya ditolak?**
-Package harus minimal dua segmen, hanya huruf/angka/underscore, dan tidak diawali
-angka di tiap segmen. Contoh valid: `com.example.app.klon1`.
+**Why is my clone package rejected?**
+The package must have at least two segments, may only contain letters, digits,
+and underscores, and each segment may not start with a digit. A valid example is
+`com.example.app.klon1`.
 
-**Apakah ikon asli bisa dipertahankan?**
-Bisa. Kosongkan pilihan ikon; engine hanya mengganti ikon kalau ada gambar yang
-dipilih.
+**Can the original icon be kept?**
+Yes. Leave the icon picker empty; the engine only replaces the icon when an image
+was selected.
 
-## Berkontribusi
+## Contributing
 
-Kontribusi terbuka untuk siapa saja: bug report, perbaikan dokumen, terjemahan,
-sampai fitur baru.
+Contributions are welcome from anyone: bug reports, documentation fixes,
+translations, and new features.
 
-### Sebelum mulai
+### Before you start
 
-- Untuk perubahan besar atau fitur baru, buka issue dulu supaya arahnya jelas.
-- Untuk bug, sertakan: versi Android, merk/tipe HP, nama aplikasi yang di-clone,
-  langkah reproduksi, dan log (`adb logcat`) kalau ada.
-- Jangan sertakan APK aplikasi berbayar atau data pribadi di issue.
+- For large changes or new features, open an issue first so the direction is
+  clear.
+- For bugs, include: Android version, phone brand/model, the cloned app's name,
+  reproduction steps, and logs (`adb logcat`) if available.
+- Do not attach APKs of paid apps or personal data to issues.
 
-### Alur kerja
+### Workflow
 
 ```bash
-# 1. Fork repo di GitHub, lalu clone fork kamu
+# 1. Fork the repo on GitHub, then clone your fork
 git clone https://github.com/<username>/openclone.git
 cd openclone
 
-# 2. Buat branch dari main
+# 2. Create a branch from main
 git checkout -b fix/icon-cache-eviction
 
-# 3. Kerjakan perubahan, lalu jalankan pemeriksaan
+# 3. Make your changes, then run the checks
 ./gradlew testDebugUnitTest lintDebug assembleDebug
 
-# 4. Commit dan push
+# 4. Commit and push
 git add -A
-git commit -m "fix: batasi cache ikon berdasarkan ukuran byte"
+git commit -m "fix: cap the icon cache by byte size"
 git push origin fix/icon-cache-eviction
 ```
 
-Lalu buka pull request ke `main`.
+Then open a pull request against `main`.
 
-### Konvensi commit
+### Commit conventions
 
-Pakai [Conventional Commits](https://www.conventionalcommits.org/):
+Use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
-feat: dukungan ikon adaptive untuk clone
-fix: cegah cache ikon tumbuh tanpa batas
-perf: hindari loadIcon saat scan aplikasi
-docs: perjelas langkah instalasi di Windows
-test: tambah kasus authorities dengan titik
-refactor: pisahkan aturan rename manifest
-chore: perbarui Gradle wrapper
+feat: adaptive icon support for clones
+fix: prevent the icon cache from growing unbounded
+perf: skip loadIcon during app scan
+docs: clarify the Windows install steps
+test: add authorities cases containing dots
+refactor: extract manifest rename rules
+chore: bump the Gradle wrapper
 ```
 
-Pesan commit dalam bahasa Inggris atau Indonesia, yang penting konsisten dalam
-satu PR.
+Commit messages may be in English or Indonesian; just stay consistent within a
+single PR.
 
-### Aturan kode
+### Code rules
 
-- **Kotlin, tanpa Java baru.** Ikuti gaya yang sudah ada di file sekitarnya.
-- **UI string selalu di `res/values/strings.xml`**, bukan hardcode di layout
-  atau kode. Bahasa UI saat ini Indonesia.
-- **Komentar dan nama API dalam bahasa Inggris.** Komentar menjelaskan *kenapa*,
-  bukan mengulang *apa* yang sudah jelas dari kode.
-- **Kerja berat tidak boleh di main thread.** Pakai `suspend` + dispatcher yang
-  tepat; jangan menelan `CancellationException`.
-- **Tulis file secara atomik** (`.tmp` lalu rename) untuk data yang tidak boleh
-  korup.
-- **Jangan menambah izin Android** tanpa diskusi di issue. Izin yang ada saat ini
-  hanya `QUERY_ALL_PACKAGES` dan `REQUEST_INSTALL_PACKAGES`.
-- **Jangan menambah dependensi besar** tanpa alasan kuat; jelaskan di PR.
-- **Non-goal yang tidak boleh dilanggar:** patch DEX, bypass signature, bypass
-  Play Integrity, atau trik yang mengakali sistem keamanan Android.
-- **Setiap aturan teks yang bisa diuji harus punya unit test.** Logika baru di
-  `ManifestNaming`/`CloneConfig` wajib disertai test.
+- **Kotlin, no new Java.** Follow the style of the surrounding files.
+- **UI strings always live in `res/values/strings.xml`**, never hardcoded in
+  layouts or code. The current UI language is Indonesian.
+- **Comments and API names in English.** Comments explain *why*, not restate
+  *what* the code already shows.
+- **Heavy work never runs on the main thread.** Use `suspend` plus the right
+  dispatcher; never swallow `CancellationException`.
+- **Write files atomically** (`.tmp` then rename) for data that must not be
+  corrupted.
+- **Do not add Android permissions** without discussing it in an issue. The
+  current permissions are only `QUERY_ALL_PACKAGES` and
+  `REQUEST_INSTALL_PACKAGES`.
+- **Do not add large dependencies** without a strong reason; explain it in the
+  PR.
+- **Non-goals that must not be violated:** DEX patching, signature bypass, Play
+  Integrity bypass, or any trick that circumvents Android security.
+- **Every testable text rule needs a unit test.** New logic in
+  `ManifestNaming`/`CloneConfig` must come with tests.
 
-### Checklist pull request
+### Pull request checklist
 
-- [ ] `./gradlew testDebugUnitTest` lulus
-- [ ] `./gradlew lintDebug` tidak menambah error/warning baru
-- [ ] `./gradlew assembleDebug` menghasilkan APK
-- [ ] Perubahan UI diuji di HP/emulator (sebutkan versi Android)
-- [ ] String baru masuk `strings.xml`
-- [ ] Tidak ada file build, keystore, atau `local.properties` ikut ter-commit
-- [ ] Deskripsi PR menjelaskan masalah, pendekatan, dan cara menguji
+- [ ] `./gradlew testDebugUnitTest` passes
+- [ ] `./gradlew lintDebug` adds no new errors/warnings
+- [ ] `./gradlew assembleDebug` produces an APK
+- [ ] UI changes were tested on a phone/emulator (mention the Android version)
+- [ ] New strings are in `strings.xml`
+- [ ] No build files, keystores, or `local.properties` are committed
+- [ ] The PR description explains the problem, the approach, and how to test
 
-### Ide kontribusi
+### Contribution ideas
 
-- Dukungan bahasa Inggris (locale `values-en`) dan bahasa lain.
-- Deteksi otomatis bentrok package sebelum tombol CLONE ditekan.
-- Ekspor/impor keystore dari layar riwayat, supaya backup tidak perlu ADB.
-- Indikator progres bertahap (persentase, bukan hanya teks).
-- Test instrumentasi untuk alur install.
-- Dukungan tema gelap yang lebih rapi dan dynamic color.
+- English (`values-en`) and other locale support.
+- Automatic package conflict detection before the CLONE button is pressed.
+- Keystore export/import from the history screen, so backups do not need ADB.
+- Staged progress indication (a percentage, not just text).
+- Instrumented tests for the install flow.
+- Better dark theme support and dynamic color.
 
-## Kredit
+## Credits
 
-- [ARSCLib](https://github.com/REAndroid/ARSCLib) (Apache-2.0) untuk membaca dan
-  menulis `AndroidManifest.xml` biner serta `resources.arsc`.
-- [Apktool](https://github.com/iBotPeaches/Apktool) (Apache-2.0), referensi
-  format APK dan inspirasi.
-- [apksig](https://maven.google.com/com/android/tools/build/apksig) dari AOSP
-  untuk signing v1/v2/v3.
-- [BouncyCastle](https://www.bouncycastle.org/) untuk sertifikat self-signed.
-- [AndroidX](https://developer.android.com/jetpack/androidx) dan
+- [ARSCLib](https://github.com/REAndroid/ARSCLib) (Apache-2.0) for reading and
+  writing binary `AndroidManifest.xml` and `resources.arsc`.
+- [Apktool](https://github.com/iBotPeaches/Apktool) (Apache-2.0), APK format
+  reference and inspiration.
+- [apksig](https://maven.google.com/com/android/tools/build/apksig) from AOSP for
+  v1/v2/v3 signing.
+- [BouncyCastle](https://www.bouncycastle.org/) for self-signed certificates.
+- [AndroidX](https://developer.android.com/jetpack/androidx) and
   [Material Components](https://github.com/material-components/material-components-android).
 
-## Lisensi
+## License
 
-MIT License, lihat file [`LICENSE`](LICENSE).
+MIT License, see the [`LICENSE`](LICENSE) file.
 Copyright (c) 2026 Muhammad Nabil Deja A.R.

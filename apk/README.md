@@ -1,56 +1,56 @@
-# Folder APK
+# APK folder
 
-Folder ini khusus menampung APK OpenClone yang siap install, supaya file rilis
-tidak tercampur dengan source code.
+This folder holds ready-to-install OpenClone APKs, so release files do not get
+mixed up with source code.
 
-## Isi
+## Contents
 
-| File | Keterangan |
+| File | Description |
 | --- | --- |
-| `OpenClone-0.1.0-debug.apk` | APK OpenClone versi 0.1.0 (debug), siap install di HP. |
+| `OpenClone-0.1.0-debug.apk` | OpenClone 0.1.0 (debug), ready to install on a phone. |
 
-Detail file:
+File details:
 
-- Ukuran: 14.194.519 byte
-- Dibangun: 24 November 2026
+- Size: 14,194,519 bytes
+- Built: November 24, 2026
 - SHA-256: `2311E8B944B503AF7F2093A88A1B65E448806C2D526046471BD6C7A1CB461C12`
 
-## Cara install
+## How to install
 
-1. Pindahkan `OpenClone-0.1.0-debug.apk` ke HP (kabel USB, Google Drive,
-   Telegram, atau apa saja).
-2. Buka file APK-nya dari file manager di HP.
-3. Saat Android bertanya, izinkan **Install unknown apps** untuk aplikasi
-   file manager / browser yang kamu pakai.
-4. Tap **Install**, lalu **Open**.
+1. Transfer `OpenClone-0.1.0-debug.apk` to your phone (USB cable, Google Drive,
+   Telegram, anything works).
+2. Open the APK file from a file manager on the phone.
+3. When Android asks, allow **Install unknown apps** for the file manager or
+   browser you are using.
+4. Tap **Install**, then **Open**.
 
-Atau lewat ADB, kalau HP sudah tersambung dan USB debugging aktif:
+Or through ADB, if the phone is connected and USB debugging is enabled:
 
 ```bash
 adb install -r OpenClone-0.1.0-debug.apk
 ```
 
-## Catatan
+## Notes
 
-- Ini build **debug**, ditandatangani dengan debug key. Untuk pemakaian sendiri
-  aman; jangan diunggah ke Play Store.
-- Setelah install, OpenClone perlu izin **Install unknown apps** untuk dirinya
-  sendiri, karena clone yang dihasilkan juga dipasang sebagai APK.
-- APK ini tidak memuat iklan, pelacakan, atau koneksi internet.
-- APK di folder ini ikut ter-commit ke Git sebagai kemudahan, bukan praktik
-  ideal. Kalau kamu membuat build baru, jangan menumpuk APK di sini: unggah ke
-  halaman [Releases](https://github.com/Nbill27/openclone/releases) atau pakai
-  artifact dari GitHub Actions, lalu perbarui hanya satu file di folder ini.
+- This is a **debug** build, signed with a debug key. It is fine for personal
+  use; do not upload it to the Play Store.
+- After installing, OpenClone itself needs the **Install unknown apps**
+  permission, because the clones it produces are also installed as APKs.
+- This APK contains no ads, no tracking, and no network access.
+- The APK in this folder is committed to Git for convenience, which is not ideal
+  practice. When you build a new one, do not pile APKs up here: upload it to the
+  [Releases](https://github.com/Nbill27/openclone/releases) page or use the
+  GitHub Actions artifact, then update just this one file.
 
-## Membuat APK baru
+## Building a new APK
 
-Dari folder `openclone`:
+From the `openclone` folder:
 
 ```bash
 ./gradlew assembleDebug
 ```
 
-Lalu salin hasilnya ke sini:
+Then copy the result here:
 
 ```powershell
 Copy-Item app\build\outputs\apk\debug\app-debug.apk apk\OpenClone-0.1.0-debug.apk -Force
