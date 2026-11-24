@@ -8,11 +8,6 @@ Aplikasi Android **open source** untuk meng-clone (menggandakan) aplikasi
 yang sudah terpasang, supaya satu aplikasi bisa dipakai dua akun sekaligus
 di satu HP. Tanpa iklan, tanpa akun, tanpa server. Semua proses jalan di HP.
 
-Dibuat karena CloneHI (yang viral di Threads) repo-nya public tapi tidak
-ada kode sumbernya, cuma README dan APK rilis. Apktool M juga sama,
-repo update-nya cuma berisi APK, bukan source code. Jadi yang ini dibuat
-dari nol, dan kodenya dibuka penuh di sini, lisensi MIT.
-
 ## Fitur
 
 - **Pilih aplikasi** dari daftar aplikasi terpasang, lengkap dengan kolom
