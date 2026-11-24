@@ -2,6 +2,7 @@ package dev.bill.openclone
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
@@ -33,6 +34,9 @@ class MainActivity : AppCompatActivity() {
             }
             startActivity(intent)
         }
+        // The row height never changes, so RecyclerView can skip a layout pass
+        // over the whole list on every update.
+        binding.appList.setHasFixedSize(true)
         binding.appList.layoutManager = LinearLayoutManager(this)
         binding.appList.adapter = adapter
 
@@ -54,7 +58,9 @@ class MainActivity : AppCompatActivity() {
             ).show()
         }
 
-        loadApps()
+        // No loadApps() here: onResume runs immediately after onCreate and
+        // owns the refresh, so loading in both places started the same
+        // package scan twice on every cold start.
     }
 
     override fun onResume() {
@@ -64,9 +70,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadApps() {
         lifecycleScope.launch {
+            // The repository serves a short-lived cached scan, so a quick trip
+            // to the clone screen costs no package-manager traffic at all.
             val apps = withContext(Dispatchers.IO) {
-                AppRepository(packageManager).listInstalledApps()
+                AppRepository(this@MainActivity).listInstalledApps()
             }
+            // The activity can be torn down while the scan runs; writing to
+            // the adapter afterwards would leak a dead view hierarchy.
+            if (isFinishing || isDestroyed) return@launch
             allApps = apps
             filter(binding.searchView.query?.toString().orEmpty())
         }
@@ -75,14 +86,12 @@ class MainActivity : AppCompatActivity() {
     private fun filter(query: String) {
         val q = query.trim().lowercase()
         val filtered = if (q.isEmpty()) {
+            // Already sorted and already carrying cached lowercase keys.
             allApps
         } else {
-            allApps.filter {
-                it.label.lowercase().contains(q) || it.packageName.lowercase().contains(q)
-            }
+            allApps.filter { it.searchKey.contains(q) }
         }
         adapter.update(filtered)
-        binding.emptyView.visibility =
-            if (filtered.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+        binding.emptyView.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
     }
 }

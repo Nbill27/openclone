@@ -10,12 +10,17 @@
     <!-- Trigger installation of the rewritten APK. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
-    <!-- Pick a custom icon from the gallery. -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!--
+        Picking a custom icon uses the Storage Access Framework
+        (ActivityResultContracts.GetContent), which grants read access to the
+        single picked image. No media permission is declared, so the app asks
+        for none on Android 13+.
+    -->
 
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:theme="@style/Theme.OpenClone">
 
