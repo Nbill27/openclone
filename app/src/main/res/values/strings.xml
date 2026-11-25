@@ -1,18 +1,185 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OpenClone</string>
-    <string name="pick_app">Pilih Aplikasi</string>
-    <string name="search_hint">Cari aplikasi...</string>
-    <string name="about">Tentang</string>
-    <string name="no_apps">Tidak ada aplikasi yang cocok.</string>
-    <string name="clone_settings">Atur Clone</string>
-    <string name="clone_name">Nama clone</string>
-    <string name="clone_package">Package clone</string>
-    <string name="clone_icon">Ikon clone</string>
-    <string name="pick_from_gallery">PILIH DARI GALERI</string>
-    <string name="remove">HAPUS</string>
-    <string name="icon_hint">Kosongkan bila ingin ikon asli tetap dipakai.</string>
-    <string name="clone_button">CLONE</string>
-    <string name="install_button">INSTALL</string>
-    <string name="share_button">BAGIKAN APK</string>
+    <string name="app_name_initials">OC</string>
+
+    <!-- Brand / navigation -->
+    <string name="brand_tagline">Kelola dan buat salinan aplikasi</string>
+    <string name="nav_apps">Aplikasi</string>
+    <string name="nav_history">Riwayat</string>
+    <string name="nav_settings">Pengaturan</string>
+    <string name="cd_settings">Pengaturan</string>
+    <string name="cd_sort">Urutkan aplikasi</string>
+    <string name="cd_back">Kembali</string>
+    <string name="cd_app_icon">Ikon aplikasi</string>
+    <string name="cd_more">Menu lainnya</string>
+    <string name="cd_external_link">Buka tautan</string>
+
+    <!-- Beranda -->
+    <string name="search_apps_hint">Cari aplikasi terpasang...</string>
+    <string name="search_history_hint">Cari riwayat...</string>
+    <string name="search_picker_hint">Cari aplikasi...</string>
+    <string name="filter_all">Semua</string>
+    <string name="filter_system">Sistem</string>
+    <string name="filter_user">Pengguna</string>
+    <string name="filter_success">Berhasil</string>
+    <string name="filter_failed">Gagal</string>
+    <string name="installed_apps_count">Aplikasi Terpasang (%1$d)</string>
+    <string name="clone_action">Clone</string>
+    <string name="empty_apps">Tidak ada aplikasi yang cocok.</string>
+
+    <!-- Buat Salinan -->
+    <string name="title_new_clone">Buat Salinan</string>
+    <string name="config_section">Konfigurasi Clone</string>
+    <string name="label_app_name">Nama Aplikasi</string>
+    <string name="label_package_name">Package Name</string>
+    <string name="label_app_icon">Ikon Aplikasi</string>
+    <string name="change_icon">Ubah Ikon</string>
+    <string name="cd_clear_name">Kosongkan nama</string>
+    <string name="cd_reset_package">Kembalikan package name</string>
+    <string name="advanced_options">Opsi Lanjutan</string>
+    <string name="advanced_version">Versi aplikasi</string>
+    <string name="advanced_splits">Split APK</string>
+    <string name="advanced_splits_none">Tidak ada</string>
+    <string name="advanced_splits_count">%1$d file</string>
+    <string name="advanced_strip_ad_id">Hapus izin Advertising ID</string>
+    <string name="advanced_strip_ad_id_desc">Clone tidak bisa membaca ID iklan perangkat</string>
+    <string name="create_clone">Buat Clone</string>
+    <string name="error_label_empty">Nama aplikasi tidak boleh kosong.</string>
+    <string name="error_package_invalid">Package name tidak valid.</string>
+    <string name="error_package_same">Package clone harus beda dari aslinya.</string>
+    <string name="error_package_installed">Package ini sudah terpasang, ganti suffix-nya.</string>
+    <string name="icon_original_hint">Ikon asli aplikasi tetap dipakai.</string>
+    <string name="error_icon_read">Gagal membaca gambar: %1$s</string>
+    <string name="error_icon_empty">Gagal membaca gambar: file kosong.</string>
+    <string name="error_app_not_found">Aplikasi tidak ditemukan.</string>
+    <string name="error_clone_file_missing">File clone tidak ditemukan, buat ulang dulu.</string>
+
+    <!-- Proses Cloning -->
+    <string name="title_clone_progress">Proses Cloning</string>
+    <string name="progress_headline">Sedang memproses...</string>
+    <string name="progress_subtitle">Membuat salinan aplikasi</string>
+    <string name="progress_percent">%1$d%%</string>
+    <string name="step_prepare">Menyiapkan lingkungan</string>
+    <string name="step_copy">Menyalin file aplikasi</string>
+    <string name="step_modify">Memodifikasi package</string>
+    <string name="step_sign">Menandatangani APK</string>
+    <string name="step_finalize">Finalisasi</string>
+    <string name="clone_failed">Clone gagal: %1$s</string>
+
+    <!-- Selesai -->
+    <string name="title_clone_result">Selesai</string>
+    <string name="cd_success">Clone berhasil</string>
+    <string name="success_headline">Clone Berhasil!</string>
+    <string name="success_subtitle">Aplikasi berhasil dibuat dan siap dipasang.</string>
+    <string name="clone_limit_title">Yang perlu diketahui</string>
+    <string name="clone_limit_body">Login Google, Play Integrity, dan layanan lain yang memeriksa tanda tangan aplikasi tidak akan bekerja di hasil clone. Aplikasi yang bergantung pada login Google tetap bisa dipasang, tapi fitur tersebut akan menolak masuk.</string>
+    <string name="install_app">Install Aplikasi</string>
+    <string name="share_apk">Bagikan APK</string>
+    <string name="view_file">Lihat File</string>
+    <string name="create_another">Buat Clone Lain</string>
+    <string name="no_file_viewer">Tidak ada aplikasi untuk membuka file ini.</string>
+    <string name="no_share_target">Tidak ada aplikasi untuk membagikan file ini.</string>
+    <string name="install_success">Clone berhasil dipasang.</string>
+    <string name="install_failed">Pemasangan gagal: %1$s</string>
+    <string name="install_viewer_missing">Tidak ada aplikasi pemasang APK: %1$s</string>
+    <string name="install_read_error">Tidak bisa membaca file APK.</string>
+    <string name="install_error_permission_conflict">Bentrok izin dengan aplikasi lain yang sudah terpasang.</string>
+    <string name="install_error_provider_conflict">Bentrok provider dengan aplikasi lain yang sudah terpasang.</string>
+    <string name="install_error_signature">Tanda tangan APK tidak cocok dengan versi yang sudah terpasang. Hapus dulu aplikasi lamanya.</string>
+    <string name="install_error_downgrade">Versi APK lebih rendah dari yang sudah terpasang.</string>
+    <string name="install_error_storage">Penyimpanan tidak cukup untuk memasang aplikasi.</string>
+    <string name="share_chooser_title">Bagikan APK clone</string>
+    <string name="compat_title">Catatan kompatibilitas</string>
+    <string name="note_bullet">• %1$s</string>
+    <string name="compat_shared_user_id">Aplikasi memakai sharedUserId. Clone akan mendapat identitas pengguna terpisah, jadi data lama tidak terbaca.</string>
+    <string name="compat_signature_permission">Aplikasi mendeklarasikan izin bertingkat signature. Izin itu tidak lagi berlaku setelah APK ditandatangani ulang.</string>
+    <string name="compat_extract_native_libs">Aplikasi mensyaratkan library native yang diekstrak. Kalau clone gagal membuka library, versi ini tidak cocok untuk perangkat ini.</string>
+    <string name="compat_splits_merged">APK split digabung menjadi satu file. Semua resource ikut terbawa, ukuran clone jadi lebih besar.</string>
+    <string name="identity_title">Identitas hasil clone</string>
+    <string name="identity_android_id">Android ID berbeda otomatis karena kunci penandatangan berubah.</string>
+    <string name="identity_ad_id_stripped">Advertising ID dinolkan karena izin AD_ID dihapus.</string>
+    <string name="identity_ad_id_kept">Advertising ID tetap sama dengan aplikasi asli.</string>
+    <string name="identity_device_profile">Merek dan model perangkat tetap sama, tidak bisa diubah per aplikasi.</string>
+    <string name="identity_network">Jaringan dan IP tetap sama, tidak bisa diubah per aplikasi.</string>
+
+    <!-- Riwayat -->
+    <string name="title_history">Riwayat Clone</string>
+    <string name="empty_history">Belum ada riwayat clone.</string>
+    <string name="history_missing_file">File sudah tidak tersedia</string>
+    <string name="history_meta_format">%1$s • %2$s</string>
+    <string name="history_share">Bagikan APK</string>
+    <string name="history_delete">Hapus dari riwayat</string>
+    <string name="history_deleted">Riwayat dihapus.</string>
+
+    <!-- Pilih Aplikasi -->
+    <string name="title_picker">Pilih Aplikasi</string>
+
+    <!-- Pengaturan -->
+    <string name="title_settings">Pengaturan</string>
+    <string name="settings_group_general">Umum</string>
+    <string name="settings_group_cloning">Cloning</string>
+    <string name="settings_dark_mode">Gunakan dark mode</string>
+    <string name="settings_dark_mode_desc">Tema gelap (disarankan)</string>
+    <string name="settings_storage">Lokasi penyimpanan</string>
+    <string name="settings_storage_desc">/storage/emulated/0/OpenClone</string>
+    <string name="settings_compat">Mode kompatibilitas</string>
+    <string name="settings_compat_desc">Tingkatkan kompatibilitas aplikasi</string>
+    <string name="settings_auto_sign">Tanda tangan otomatis</string>
+    <string name="settings_auto_sign_desc">Menandatangani APK secara otomatis</string>
+    <string name="settings_group_info">Info</string>
+    <string name="settings_about">Tentang OpenClone</string>
+    <string name="settings_about_desc">Versi, lisensi, dan kredit</string>
+    <string name="settings_dark_only">OpenClone hanya tersedia dalam tema gelap.</string>
+    <string name="settings_sign_required">APK harus ditandatangani agar bisa dipasang.</string>
+    <string name="settings_storage_body">Clone disimpan di penyimpanan privat aplikasi:\n\n%1$s\n\nGunakan Riwayat Clone untuk memasang atau membagikan APK.</string>
+    <string name="action_close">Tutup</string>
+    <string name="action_open">Buka</string>
+    <string name="action_cancel">Batal</string>
+    <string name="action_continue">Lanjut</string>
+
+    <!-- Pengaturan: kunci penandatangan -->
+    <string name="settings_group_keystore">Kunci Penandatangan</string>
+    <string name="settings_keystore_status">Kunci aktif</string>
+    <string name="settings_keystore_status_none">Belum dibuat</string>
+    <string name="settings_keystore_status_desc">Ketuk untuk melihat detail kunci</string>
+    <string name="settings_keystore_value_format">%1$s s/d %2$s</string>
+    <string name="settings_keystore_export">Ekspor kunci</string>
+    <string name="settings_keystore_export_desc">Simpan cadangan ke file .p12</string>
+    <string name="settings_keystore_import">Impor kunci</string>
+    <string name="settings_keystore_import_desc">Pulihkan dari file cadangan</string>
+    <string name="keystore_password_title_export">Buat kata sandi cadangan</string>
+    <string name="keystore_password_title_import">Masukkan kata sandi cadangan</string>
+    <string name="keystore_password_hint">Kata sandi</string>
+    <string name="keystore_password_helper">Minimal 6 karakter. Tanpa kata sandi ini file cadangan tidak bisa dibuka.</string>
+    <string name="keystore_password_warning">Simpan kata sandi dan file cadangan di tempat aman. Kalau kunci hilang, clone yang sudah terpasang tidak bisa diperbarui — hanya bisa dipasang ulang dan kehilangan data.</string>
+    <string name="keystore_export_success">Kunci berhasil diekspor.</string>
+    <string name="keystore_export_failed">Ekspor gagal: %1$s</string>
+    <string name="keystore_import_success">Kunci berhasil dipulihkan.</string>
+    <string name="keystore_import_failed">Impor gagal: %1$s</string>
+    <string name="keystore_error_short">Kata sandi minimal 6 karakter.</string>
+    <string name="keystore_error_wrong">Kata sandi salah atau file bukan cadangan kunci.</string>
+    <string name="keystore_error_nokey">File tidak berisi kunci privat.</string>
+    <string name="keystore_error_unknown">Terjadi kesalahan saat membaca file.</string>
+    <string name="keystore_import_confirm_title">Ganti kunci aktif?</string>
+    <string name="keystore_import_confirm_body">Kunci yang sekarang akan diganti dengan kunci dari file cadangan. Clone yang ditandatangani dengan kunci lama tidak bisa diperbarui, hanya bisa dipasang ulang.</string>
+    <string name="keystore_details_title">Detail kunci</string>
+    <string name="keystore_detail_subject">Subjek</string>
+    <string name="keystore_detail_algorithm">Algoritma</string>
+    <string name="keystore_detail_valid">Berlaku sampai</string>
+    <string name="keystore_detail_fingerprint">Sidik SHA-256</string>
+    <string name="keystore_detail_body">%1$s: %2$s\n%3$s: %4$s\n%5$s: %6$s\n\n%7$s:\n%8$s</string>
+    <string name="keystore_no_key_yet">Belum ada kunci. Kunci dibuat otomatis saat clone pertama.</string>
+
+    <!-- Tentang -->
+    <string name="title_about">Tentang</string>
+    <string name="version_label">v1.0.0</string>
+    <string name="version_label_format">v%1$s</string>
+    <string name="about_link_unavailable">Tidak ada aplikasi untuk membuka tautan ini.</string>
+    <string name="about_description">Aplikasi open-source untuk membuat\nsalinan aplikasi Android.</string>
+    <string name="about_github">Lihat di GitHub</string>
+    <string name="about_license">Lisensi</string>
+    <string name="about_credits">Kredit</string>
+    <string name="about_license_body">MIT License\n\nCopyright (c) 2026 Nabil Deja\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction.</string>
+    <string name="about_credits_body">Dibuat oleh Nabil Deja.\n\nTerima kasih kepada komunitas open source Android atas pustaka dan alat yang membuat proyek ini mungkin.</string>
 </resources>

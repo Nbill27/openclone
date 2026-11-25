@@ -4,6 +4,7 @@ import android.content.Context
 import com.android.apksig.ApkSigner
 import com.reandroid.apk.ApkBundle
 import com.reandroid.apk.ApkModule
+import com.reandroid.arsc.chunk.xml.AndroidManifestBlock
 import com.reandroid.archive.ByteInputSource
 import com.reandroid.arsc.chunk.xml.ResXmlElement
 import kotlinx.coroutines.currentCoroutineContext
@@ -76,6 +77,7 @@ class CloneEngine(private val context: Context) {
             module = loaded
             val oldPackage = loaded.packageName
                 ?: throw IllegalStateException("Tidak bisa membaca package name dari APK")
+            val compatNotes = collectCompatNotes(loaded, app)
 
             onProgress("Mengganti package name...")
             ensureActive()
@@ -94,6 +96,11 @@ class CloneEngine(private val context: Context) {
 
             onProgress("Menulis APK baru...")
             ensureActive()
+            // Optional identity step: drop the AD_ID permission so the clone
+            // cannot be linked to the original install by its advertising ID.
+            if (config.stripAdId) {
+                stripAdvertisingId(loaded)
+            }
             // The old signatures are invalid once the manifest changed.
             // Drop only the signature files: META-INF/services and
             // *.kotlin_module must stay, ServiceLoader and Kotlin need them.
@@ -121,6 +128,8 @@ class CloneEngine(private val context: Context) {
                 outputFileName = finalFile.name,
                 outputFileSize = finalFile.length(),
                 hadSplits = app.splitCount > 0,
+                compatNotes = compatNotes,
+                identityNotes = buildIdentityNotes(config),
             )
         } finally {
             try {
@@ -161,6 +170,143 @@ class CloneEngine(private val context: Context) {
             bundle.mergeModules()
         }
     }
+
+    /**
+     * Reads the source manifest for the handful of declarations that decide
+     * whether a re-signed, re-packaged copy can still work. Every hit becomes
+     * a note on the result screen: none of these can be repaired at manifest
+     * level, and pretending otherwise would just hide a broken clone.
+     */
+    private fun collectCompatNotes(module: ApkModule, app: InstalledApp): List<String> {
+        val notes = mutableListOf<String>()
+        val manifest = try {
+            module.androidManifest
+        } catch (_: Exception) {
+            null
+        }
+        if (manifest != null) {
+            val root = try {
+                manifest.manifestElement
+            } catch (_: Exception) {
+                null
+            }
+            if (root != null && attributeValue(root, ATTR_SHARED_USER_ID) != null) {
+                notes += context.getString(R.string.compat_shared_user_id)
+            }
+            if (declaresSignaturePermission(manifest)) {
+                notes += context.getString(R.string.compat_signature_permission)
+            }
+            val extractNativeLibs = try {
+                manifest.isExtractNativeLibs()
+            } catch (_: Exception) {
+                null
+            }
+            if (extractNativeLibs == false) {
+                notes += context.getString(R.string.compat_extract_native_libs)
+            }
+        }
+        if (app.splitCount > 0) {
+            notes += context.getString(R.string.compat_splits_merged)
+        }
+        return notes
+    }
+
+    /** True when the app declares a permission protected by its own signature. */
+    private fun declaresSignaturePermission(manifest: AndroidManifestBlock): Boolean {
+        val elements = try {
+            manifest.recursiveElements()
+        } catch (_: Exception) {
+            return false
+        }
+        while (elements.hasNext()) {
+            val element = try {
+                elements.next()
+            } catch (_: Exception) {
+                null
+            } ?: continue
+            val elementName = try {
+                element.name
+            } catch (_: Exception) {
+                null
+            } ?: continue
+            if (elementName != ELEMENT_PERMISSION) continue
+            val protectionLevel = attributeValue(element, ATTR_PROTECTION_LEVEL) ?: continue
+            if (protectionLevel.split('|').any { it.trim() == PROTECTION_SIGNATURE }) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun attributeValue(element: ResXmlElement, attributeName: String): String? {
+        val attributes = try {
+            element.getAttributes()
+        } catch (_: Exception) {
+            return null
+        }
+        while (attributes.hasNext()) {
+            val attr = try {
+                attributes.next()
+            } catch (_: Exception) {
+                null
+            } ?: continue
+            val name = try {
+                attr.name
+            } catch (_: Exception) {
+                null
+            } ?: continue
+            if (name != attributeName) continue
+            return try {
+                attr.valueAsString
+            } catch (_: Exception) {
+                null
+            }
+        }
+        return null
+    }
+
+    /**
+     * Drops every `uses-permission` declaration for the advertising ID.
+     * On Android 13+ (targetSdk 33+) an app without this permission receives a
+     * zeroed advertising ID, which is the only part of the ad identity that is
+     * controllable per app without hooking the framework.
+     */
+    private fun stripAdvertisingId(module: ApkModule) {
+        val manifest = try {
+            module.androidManifest
+        } catch (_: Exception) {
+            return
+        }
+        try {
+            manifest.removeElementsIf { element ->
+                val elementName = try {
+                    element.name
+                } catch (_: Exception) {
+                    null
+                }
+                elementName in USES_PERMISSION_ELEMENTS &&
+                    attributeValue(element, ATTR_NAME) == AD_ID_PERMISSION
+            }
+        } catch (_: Exception) {
+            // Leaving the permission in place keeps the clone installable.
+        }
+    }
+
+    /**
+     * What the user can actually verify after installing. Deliberately factual:
+     * the Android ID already differs (it is derived from the signing key), the
+     * advertising ID only differs when the permission was stripped, and the
+     * device / network identity cannot be changed per app at all.
+     */
+    private fun buildIdentityNotes(config: CloneConfig): List<String> = listOf(
+        context.getString(R.string.identity_android_id),
+        context.getString(
+            if (config.stripAdId) R.string.identity_ad_id_stripped
+            else R.string.identity_ad_id_kept,
+        ),
+        context.getString(R.string.identity_device_profile),
+        context.getString(R.string.identity_network),
+    )
 
     /**
      * Package name alone is not enough for two copies of an app to coexist.
@@ -351,6 +497,11 @@ class CloneEngine(private val context: Context) {
         private const val ATTR_NAME = "name"
         private const val ATTR_AUTHORITIES = "authorities"
         private const val ATTR_PROCESS = "process"
+        private const val ATTR_SHARED_USER_ID = "sharedUserId"
+        private const val ATTR_PROTECTION_LEVEL = "protectionLevel"
+        private const val ELEMENT_PERMISSION = "permission"
+        private const val PROTECTION_SIGNATURE = "signature"
+        private const val AD_ID_PERMISSION = "com.google.android.gms.permission.AD_ID"
 
         /** Elements that declare a permission, so their name must be unique. */
         private val DECLARED_PERMISSION_ELEMENTS = setOf(

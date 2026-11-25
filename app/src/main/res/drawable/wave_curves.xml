@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="220dp"
+    android:viewportWidth="360"
+    android:viewportHeight="220">
+
+    <!-- Broad back curve -->
+    <path
+        android:fillColor="@color/wave_a"
+        android:pathData="M0,0 L360,0 L360,138 C312,158 268,104 216,116 C164,128 120,176 66,166 C40,161 18,150 0,136 Z" />
+
+    <!-- Tighter front curve -->
+    <path
+        android:fillColor="@color/wave_b"
+        android:pathData="M0,0 L360,0 L360,74 C316,96 276,52 228,62 C180,72 138,106 88,98 C56,93 26,84 0,70 Z" />
+</vector>

@@ -4,17 +4,22 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import dev.bill.openclone.databinding.ItemAppBinding
+import dev.bill.openclone.databinding.ItemAppCardBinding
 
+/**
+ * Rows for the "Aplikasi Terpasang" list on Beranda (DESAIN.md section 4,
+ * Layar 1). Each card is the app icon, its name, the package name and the
+ * white "Clone" pill; both the card and the pill open the config screen.
+ */
 class AppListAdapter(
     private var apps: List<InstalledApp>,
     private val onClick: (InstalledApp) -> Unit,
 ) : RecyclerView.Adapter<AppListAdapter.ViewHolder>() {
 
-    class ViewHolder(val binding: ItemAppBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewHolder(val binding: ItemAppCardBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = ItemAppBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemAppCardBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
 
@@ -29,12 +34,8 @@ class AppListAdapter(
         holder.binding.appIcon.contentDescription = app.label
         holder.binding.appName.text = app.label
         holder.binding.appPackage.text = app.packageName
-        val meta = StringBuilder()
-        meta.append("v${app.displayVersion}")
-        if (app.splitCount > 0) meta.append("  •  ${app.splitCount + 1} bagian APK")
-        if (app.isSystemApp) meta.append("  •  sistem")
-        holder.binding.appMeta.text = meta.toString()
         holder.binding.root.setOnClickListener { onClick(app) }
+        holder.binding.cloneAction.setOnClickListener { onClick(app) }
     }
 
     override fun getItemCount(): Int = apps.size
@@ -65,7 +66,7 @@ class AppListAdapter(
             "${splitSourceDirs.size}|$isSystemApp"
 
     private companion object {
-        /** Matches item_app.xml. */
+        /** Matches the 48dp appIcon in item_app_card.xml. */
         const val ICON_DP = 48
     }
 }

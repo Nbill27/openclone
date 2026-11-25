@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Organic wave canvas: flat #0D0D0F with soft curves in the wave ladder. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="390dp"
+    android:height="844dp"
+    android:viewportWidth="390"
+    android:viewportHeight="844">
+
+    <path
+        android:fillColor="@color/bg_canvas"
+        android:pathData="M0,0 L390,0 L390,844 L0,844 Z" />
+
+    <path
+        android:fillColor="@color/wave_a"
+        android:pathData="M0,0 L390,0 L390,132 C332,166 262,100 178,124 C116,142 48,130 0,100 Z" />
+
+    <path
+        android:fillColor="@color/wave_b"
+        android:pathData="M0,0 L390,0 L390,58 C318,92 250,50 178,70 C110,89 52,76 0,50 Z" />
+
+    <path
+        android:fillColor="@color/bg_wave_layer"
+        android:pathData="M0,844 L390,844 L390,668 C318,640 262,714 180,690 C112,670 50,700 0,738 Z" />
+
+    <path
+        android:fillColor="@color/wave_a"
+        android:pathData="M0,844 L390,844 L390,782 C306,756 244,806 152,792 C94,783 40,794 0,814 Z" />
+</vector>

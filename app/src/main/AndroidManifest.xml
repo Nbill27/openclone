@@ -34,9 +34,37 @@
         </activity>
 
         <activity
-            android:name=".CloneActivity"
+            android:name=".AppPickerActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".CloneConfigActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
+        <!-- Layar 3 + Layar 4. configChanges keeps a running clone alive
+             across rotation instead of restarting the job. -->
+        <activity
+            android:name=".CloneProgressActivity"
+            android:exported="false"
+            android:parentActivityName=".CloneConfigActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
+        <activity
+            android:name=".HistoryActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".AboutActivity"
+            android:exported="false"
+            android:parentActivityName=".SettingsActivity" />
 
         <!-- Hand the rewritten APK to the package installer on API 24+. -->
         <provider

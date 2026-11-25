@@ -1,8 +1,203 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.OpenClone" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/openclone_blue</item>
-        <item name="colorOnPrimary">@android:color/white</item>
-        <item name="android:windowLightStatusBar">true</item>
+
+    <style name="Theme.OpenClone" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/accent_white</item>
+        <item name="colorOnPrimary">@color/text_on_white</item>
+        <item name="colorSecondary">@color/accent_white</item>
+        <item name="colorOnSecondary">@color/text_on_white</item>
+        <item name="colorSurface">@color/bg_surface</item>
+        <item name="colorOnSurface">@color/accent_white</item>
+        <item name="colorSurfaceVariant">@color/bg_elevated</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorOutline">@color/border_subtle</item>
+        <item name="colorOutlineVariant">@color/border_input</item>
+        <item name="android:colorBackground">@color/bg_canvas</item>
+        <item name="android:windowBackground">@color/bg_canvas</item>
+        <item name="android:statusBarColor">@color/bg_canvas</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/nav_bg</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColorPrimary">@color/accent_white</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorHint">@color/text_muted</item>
+        <item name="android:windowActionModeOverlay">true</item>
     </style>
+
+    <!-- Typography roles from DESAIN.md section 2.
+         Dotted style names inherit from their prefix, so the base style
+         must exist even when it carries no attributes of its own. -->
+    <style name="Text.OpenClone" parent="" />
+
+    <style name="Text.OpenClone.BrandTitle">
+        <item name="android:textSize">24sp</item>
+        <item name="android:lineSpacingExtra">6sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/accent_white</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="Text.OpenClone.HeroMetric">
+        <item name="android:textSize">32sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/accent_white</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="Text.OpenClone.HeroHeading">
+        <item name="android:textSize">22sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/accent_white</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="Text.OpenClone.PageTitle">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/accent_white</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="Text.OpenClone.StatusHeading">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/accent_white</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="Text.OpenClone.SectionTitle">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/accent_white</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="Text.OpenClone.ItemTitle">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/accent_white</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="Text.OpenClone.Body">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/accent_white</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="Text.OpenClone.Detail">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="Text.OpenClone.Caption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="Text.OpenClone.Label">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="Text.OpenClone.ListHeader">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/accent_white</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="Text.OpenClone.NavLabel">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/text_muted</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Widgets. The empty parent stops Android from resolving the implicit
+         parent style "Widget", which does not exist. -->
+    <style name="Widget.OpenClone" parent="" />
+
+    <style name="Widget.OpenClone.Button" parent="Widget.OpenClone" />
+
+    <!-- Buttons.
+
+         These styles are applied to plain <Button> tags. With a Material 3
+         theme those inflate as MaterialButton, which paints its own
+         MaterialShapeDrawable from colorPrimary and ignores a custom
+         android:background. That is what made the secondary/outline buttons
+         render as blank white boxes: white fill from colorPrimary plus white
+         text. So instead of fighting the drawable, drive the Material
+         attributes directly: backgroundTint, cornerRadius and stroke. -->
+    <style name="Widget.OpenClone.Button.Primary">
+        <item name="android:textColor">@color/text_on_white</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="backgroundTint">@color/accent_white</item>
+        <item name="cornerRadius">14dp</item>
+    </style>
+
+    <style name="Widget.OpenClone.Button.Secondary">
+        <item name="android:textColor">@color/accent_white</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="backgroundTint">@color/bg_elevated</item>
+        <item name="cornerRadius">12dp</item>
+    </style>
+
+    <style name="Widget.OpenClone.Button.Outline">
+        <item name="android:textColor">@color/accent_white</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">@color/border_input</item>
+    </style>
+
+    <style name="Widget.OpenClone.LinkRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:background">@drawable/bg_card_ripple</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+    </style>
+
+    <style name="Widget.OpenClone.IconButton">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">@drawable/ripple_circle</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="tint">@color/accent_white</item>
+    </style>
+
+    <!-- Secondary text inside primary buttons keeps the dark-on-white contrast. -->
+
 </resources>

@@ -3,9 +3,10 @@ package dev.bill.openclone
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import dev.bill.openclone.databinding.ActivityMainBinding
@@ -14,49 +15,53 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Screen 1, "Pilih Aplikasi": searchable list of installed apps.
- * Tap one to go to the "Atur Clone" screen.
+ * Layar 1 "Beranda" (DESAIN.md section 4): searchable list of installed apps
+ * with Semua/Sistem/Pengguna filters, a shortcut to the app picker grid, and
+ * the shared bottom navigation.
+ *
+ * Tapping a row or its Clone pill opens [CloneConfigActivity] with the app's
+ * package name; the config screen re-resolves the rest, so nothing else has
+ * to be handed over here.
  */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: AppListAdapter
+
     private var allApps: List<InstalledApp> = emptyList()
+    private var query: String = ""
+    private var filter: AppFilter = AppFilter.ALL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        adapter = AppListAdapter(emptyList()) { app ->
-            val intent = Intent(this, CloneActivity::class.java).apply {
-                putExtra(CloneActivity.EXTRA_PACKAGE, app.packageName)
-            }
-            startActivity(intent)
-        }
+        adapter = AppListAdapter(emptyList()) { app -> openConfig(app.packageName) }
         // The row height never changes, so RecyclerView can skip a layout pass
         // over the whole list on every update.
         binding.appList.setHasFixedSize(true)
         binding.appList.layoutManager = LinearLayoutManager(this)
         binding.appList.adapter = adapter
 
-        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean = true
-            override fun onQueryTextChange(newText: String?): Boolean {
-                filter(newText.orEmpty())
-                return true
-            }
-        })
-
-        binding.aboutButton.setOnClickListener {
-            Toast.makeText(
-                this,
-                "OpenClone v0.1.0, open source MIT. " +
-                    "Clone hanya untuk aplikasi milikmu sendiri, " +
-                    "bukan untuk Play Store.",
-                Toast.LENGTH_LONG,
-            ).show()
+        binding.searchInput.doAfterTextChanged { text ->
+            query = text?.toString().orEmpty()
+            applyFilters()
         }
+
+        binding.chipAll.setOnClickListener { selectFilter(AppFilter.ALL) }
+        binding.chipSystem.setOnClickListener { selectFilter(AppFilter.SYSTEM) }
+        binding.chipUser.setOnClickListener { selectFilter(AppFilter.USER) }
+
+        binding.settingsButton.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+        binding.pickerButton.setOnClickListener {
+            startActivity(Intent(this, AppPickerActivity::class.java))
+        }
+
+        binding.bottomNav.select(BottomNavView.Tab.APPS)
+        renderChips()
 
         // No loadApps() here: onResume runs immediately after onCreate and
         // owns the refresh, so loading in both places started the same
@@ -79,19 +84,74 @@ class MainActivity : AppCompatActivity() {
             // the adapter afterwards would leak a dead view hierarchy.
             if (isFinishing || isDestroyed) return@launch
             allApps = apps
-            filter(binding.searchView.query?.toString().orEmpty())
+            applyFilters()
         }
     }
 
-    private fun filter(query: String) {
+    private fun selectFilter(next: AppFilter) {
+        if (filter == next) return
+        filter = next
+        renderChips()
+        applyFilters()
+    }
+
+    private fun applyFilters() {
         val q = query.trim().lowercase()
-        val filtered = if (q.isEmpty()) {
-            // Already sorted and already carrying cached lowercase keys.
-            allApps
-        } else {
-            allApps.filter { it.searchKey.contains(q) }
-        }
+        val filtered = allApps.asSequence()
+            .filter { filter.matches(it) }
+            .filter { q.isEmpty() || it.searchKey.contains(q) }
+            .toList()
+
+        binding.listHeader.text = getString(R.string.installed_apps_count, filtered.size)
         adapter.update(filtered)
         binding.emptyView.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+    }
+
+    /**
+     * The chips are plain TextViews, so the selected look is swapped here
+     * instead of through a selector: an active chip is a white pill with dark
+     * text, an inactive one a dark pill with secondary text (both still keep
+     * the 48dp touch layer supplied by the drawable).
+     */
+    private fun renderChips() {
+        val chips = mapOf(
+            AppFilter.ALL to binding.chipAll,
+            AppFilter.SYSTEM to binding.chipSystem,
+            AppFilter.USER to binding.chipUser,
+        )
+        chips.forEach { (candidate, chip) -> styleChip(chip, candidate == filter) }
+    }
+
+    private fun styleChip(chip: TextView, active: Boolean) {
+        chip.setBackgroundResource(
+            if (active) R.drawable.bg_chip_active_touch else R.drawable.bg_chip_inactive_touch,
+        )
+        chip.setTextColor(
+            ContextCompat.getColor(
+                this,
+                if (active) R.color.text_on_white else R.color.text_secondary,
+            ),
+        )
+        chip.isSelected = active
+    }
+
+    private fun openConfig(packageName: String) {
+        startActivity(
+            Intent(this, CloneConfigActivity::class.java)
+                .putExtra(CloneConfigActivity.EXTRA_ORIGINAL_PACKAGE, packageName),
+        )
+    }
+
+    /** Semua / Sistem / Pengguna, applied on top of the text query. */
+    private enum class AppFilter {
+        ALL,
+        SYSTEM,
+        USER;
+
+        fun matches(app: InstalledApp): Boolean = when (this) {
+            ALL -> true
+            SYSTEM -> app.isSystemApp
+            USER -> !app.isSystemApp
+        }
     }
 }

@@ -1,111 +1,234 @@
-# OpenClone
+<p align="center">
+  <img src="docs/images/feature-graphic.png" alt="OpenClone — Clone apps. Keep control." width="100%">
+</p>
 
-[![Build](https://github.com/Nbill27/openclone/actions/workflows/build.yml/badge.svg)](https://github.com/Nbill27/openclone/actions/workflows/build.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Nbill27/openclone/blob/main/LICENSE)
-[![Release](https://img.shields.io/github/v/release/Nbill27/openclone)](https://github.com/Nbill27/openclone/releases)
+<h1 align="center"><img src="docs/images/app-icon.png" width="48" alt="" valign="middle"> OpenClone</h1>
 
-An **open source** Android app that clones (duplicates) an already installed
-app, so you can run two accounts of the same app on one phone. No ads, no
-account, no server. Everything runs on the device.
+<p align="center">
+  An open-source Android app cloning utility.<br>
+  Create a separate installable app from an app already on your device — no root, no ads, no account, no server.
+</p>
 
-A clone is produced by copying the original APK, rewriting the package name in
-the manifest, and re-signing the result with a key owned by OpenClone. There is
-no DEX patching, no signature bypass, and no root.
+<p align="center">
+  <a href="https://github.com/Nbill27/openclone/releases/latest/download/app-debug.apk"><b>⬇ Download the latest APK</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/Nbill27/openclone/releases">All releases</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/Nbill27/openclone">Source code</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Nbill27/openclone/actions/workflows/build.yml"><img alt="Build" src="https://github.com/Nbill27/openclone/actions/workflows/build.yml/badge.svg"></a>
+  <a href="https://github.com/Nbill27/openclone/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/Nbill27/openclone?label=release&color=ffffff&labelColor=242424"></a>
+  <img alt="Platform: Android" src="https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white">
+  <img alt="Minimum Android: 8.0" src="https://img.shields.io/badge/minAndroid-8.0%20(API%2026)-242424">
+  <img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-1.9.24-7F52FF?logo=kotlin&logoColor=white">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-ffffff?labelColor=242424"></a>
+  <img alt="No ads" src="https://img.shields.io/badge/ads-none-242424">
+  <a href="https://github.com/Nbill27/openclone/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/Nbill27/openclone/total?label=downloads&color=ffffff&labelColor=242424"></a>
+</p>
+
+---
+
+## Screenshots
+
+| App list | Clone configuration |
+|:---:|:---:|
+| <img src="docs/images/01-daftar-aplikasi.png" width="260" alt="OpenClone app list"> | <img src="docs/images/02-konfigurasi-clone.png" width="260" alt="OpenClone clone configuration"> |
+| **Clone history** | **Settings** |
+| <img src="docs/images/03-riwayat-clone.png" width="260" alt="OpenClone clone history"> | <img src="docs/images/04-pengaturan.png" width="260" alt="OpenClone settings"> |
 
 ---
 
-## Table of contents
+## What is OpenClone?
 
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-  - [Download a release APK](#download-a-release-apk)
-  - [Use the APK already in the repo](#use-the-apk-already-in-the-repo)
-  - [Build it yourself](#build-it-yourself)
-- [Usage](#usage)
-- [Project layout](#project-layout)
-- [How it works](#how-it-works)
-- [Signing key: read this first](#signing-key-read-this-first)
-- [Testing and CI](#testing-and-ci)
-- [Limitations](#limitations)
-- [FAQ](#faq)
-- [Contributing](#contributing)
-- [Credits](#credits)
-- [License](#license)
+OpenClone builds a new, separately installable APK from an app that is already installed on your Android device. The clone gets its own package name and is signed with an OpenClone-managed key, so Android treats it as a different app — a second account, a second profile, or a sandboxed copy without touching the original installation.
 
----
+Everything runs on the phone. OpenClone has no account system, no ads, no analytics, and no remote cloning service. The manifest does not request the `INTERNET` permission.
+
+> OpenClone changes the **app package identity**. It does **not** spoof the device, patch DEX or native code, bypass signature verification, or bypass Play Integrity. See [Compatibility and limitations](#compatibility-and-limitations).
 
 ## Features
 
-- **Pick an app** from the list of installed apps, with a search field. System
-  apps are listed and marked too; whether to clone them is up to you.
-- **Configure the clone on one screen.** The clone name is filled in
-  automatically (for example `Muse 2`), the clone package is filled in
-  automatically (for example `com.facebook.aura.klon1`, moving on to `klon2`,
-  `klon3` when already taken), and the icon can be replaced from the gallery.
-- **Split APKs are supported.** Apps installed as several APKs (App Bundle) are
-  merged first, then cloned.
-- **One signing key for every clone**, so clones can be updated without
-  uninstalling first. The key is created once on first launch and stored on the
-  device.
-- **Clone history** is kept in the app, so finished clone APKs can be
-  re-installed or shared without cloning from scratch again.
-- **The app list stays light** on phones with hundreds of apps: the scan skips
-  icons, icons load per visible row, and scan results are cached briefly.
-- **No ads, no tracking, no internet.** Cloning is a purely local process.
+### Discover
 
-## Requirements
+- Browse every installed app, system apps included, with a clear label for each.
+- Search by app name or package name.
+- See the app version and whether it is delivered as split APKs.
+- Icons load lazily per visible row and are cached, so the list stays responsive on phones with hundreds of apps.
+
+### Configure the clone
+
+- Suggested clone label and package name (`com.example.app.clone1`, `.clone2`, …), skipping names that are already taken.
+- Editable label and package name, validated before the clone starts.
+- Optional custom launcher icon picked through Android's system file picker (no gallery permission).
+- Advanced panel showing the source app version and the split APK count.
+- Optional **Advertising ID permission removal** — the clone no longer declares `com.google.android.gms.permission.AD_ID`, so it reads a zeroed advertising ID instead of the device-wide one.
+
+### Process
+
+- Merge split APKs from App Bundle installs into a single output APK before rewriting.
+- Rewrite the package name in the manifest and resource table, along with permission declarations, provider `authorities`, component permission references, and package-derived process names.
+- Replace the app label and optionally the launcher icon.
+- Strip old signing metadata while keeping unrelated `META-INF` payloads such as service descriptors.
+- Sign the result with the persistent OpenClone key using APK Signature Scheme v1, v2, and v3.
+- Run the whole pipeline off the main thread, with staged progress and a cancellable operation.
+
+### Inspect the result
+
+The result screen reports what may affect the clone instead of leaving you to guess:
+
+- **Compatibility notes** — `sharedUserId`, signature-level permissions that stop applying after re-signing, apps that require extracted native libraries, and merged split APKs.
+- **Identity notes** — Android ID changes automatically because the signing key changed, whether the advertising ID is zeroed or shared with the original, and the fact that device model and network identity stay the same for every app on the phone.
+
+### Install, share, revisit
+
+- Install the generated APK through Android's package installer.
+- Share the generated APK with any app through the system share sheet.
+- Clone history keeps every finished clone, so an APK can be re-installed, shared, or deleted later without cloning again.
+- Search inside the history and see the stored size and creation time.
+
+### Settings and signing key
+
+- Key status row with subject, algorithm, expiry date, and SHA-256 fingerprint.
+- **Export** the active signing key to a password-protected `.p12` file.
+- **Import** a backup to restore the key on a new device, with a confirmation step before the active key is replaced.
+- Informational rows for storage location and app version.
+
+## Download
+
+Get the latest build from the [Releases page](https://github.com/Nbill27/openclone/releases/latest).
+
+| Option | Details |
+|---|---|
+| Latest release | [Download app-debug.apk](https://github.com/Nbill27/openclone/releases/latest/download/app-debug.apk) |
+| APK included in the repository | [`apk/OpenClone-0.1.0-debug.apk`](apk/OpenClone-0.1.0-debug.apk) |
+| Build from source | Follow [Build from source](#build-from-source) |
+
+The current `v0.1.0` release ships `app-debug.apk`, a **debug build intended for testing and personal use**, not a Play Store production release. Sizes and checksums are recorded in [`apk/README.md`](apk/README.md).
+
+### Requirements on the phone
 
 - Android 8.0 (API 26) or newer.
-- **Install unknown apps** permission for OpenClone, because clones are
-  installed as regular APKs.
-- `QUERY_ALL_PACKAGES` permission to see the list of installed apps.
-- No storage permission: icon picking goes through the system file picker
-  (Storage Access Framework), not full gallery access.
+- **Install unknown apps** allowed for OpenClone, because clones are installed as ordinary APKs.
+- `QUERY_ALL_PACKAGES` to list installed apps and `REQUEST_INSTALL_PACKAGES` to start installation.
 
-## Installation
+## How it works
 
-### Download a release APK
+Android has no public API for running the same installed app twice. OpenClone therefore produces another installable package:
 
-1. Open the [Releases](https://github.com/Nbill27/openclone/releases) page.
-2. Download the APK from the latest release.
-3. Open the APK file on your phone, allow **Install unknown apps** when asked,
-   then tap **Install**.
-
-Via ADB, if the phone is connected and USB debugging is on:
-
-```bash
-adb install -r OpenClone-0.1.0-debug.apk
+```text
+Installed app
+     │
+     ▼
+Copy the base APK and any split APKs
+     │
+     ▼
+Load the APK bundle and merge splits
+     │
+     ▼
+Rewrite package name and related manifest identifiers
+     │
+     ▼
+Update app label, optional icon, optional AD_ID permission removal
+     │
+     ▼
+Remove obsolete signature entries
+     │
+     ▼
+Write and sign the new APK (v1 + v2 + v3)
+     │
+     ▼
+Report compatibility and identity notes
+     │
+     ▼
+Install or share the clone
 ```
 
-### Use the APK already in the repo
+The engine uses [REAndroid ARSCLib](https://github.com/REAndroid/ARSCLib) to read and rewrite resources and manifests, then [AOSP apksig](https://android.googlesource.com/platform/tools/apksig/) to sign the output.
 
-The [`apk/`](apk/) folder contains a prebuilt APK, so you do not need an Android
-toolchain at all:
+### Implementation details
 
-```bash
-git clone https://github.com/Nbill27/openclone.git
-cd openclone/apk
-```
+- **Package identity** is rewritten in the manifest and in the resource table, not just in one place.
+- **Manifest references** — permission declarations, provider `authorities`, component permission references, and package-derived process names are adjusted where applicable.
+- **Split APKs** are loaded as an APK bundle and merged before rewriting, so App Bundle installs produce one output file.
+- **Signature cleanup** removes the previous signing block while retaining unrelated `META-INF` files.
+- **`resources.arsc`** is written uncompressed to satisfy Android's APK installation rules.
+- **Atomic output** — the APK is written and signed through temporary files, so an interrupted run never replaces a finished clone.
+- **Keystore safety** — importing a backup writes to a temporary file first and only then swaps it in, so a failed import cannot destroy the active key.
 
-Transfer `OpenClone-0.1.0-debug.apk` to your phone and install it as usual.
-Version, size, and checksum of each file are recorded in
-[`apk/README.md`](apk/README.md).
+## Compatibility and limitations
 
-### Build it yourself
+OpenClone only changes package metadata and re-signs the APK. It cannot make every app accept the result.
 
-You need:
+- Apps that verify their signing certificate, use Play Integrity or similar attestation, or implement anti-tampering checks may refuse to run. Banking apps and some games are the usual cases.
+- **Google Sign-In does not work inside a clone.** The clone's package name and signing certificate are not registered in the original developer's Google Cloud / Firebase project, so Google rejects the request. OpenClone shows this warning on the result screen instead of pretending otherwise.
+- A clone installs as a **fresh app**. OpenClone copies APK files, not the original app's private data or logged-in session.
+- Clones cannot receive Play Store updates, because both the package name and the signing certificate differ.
+- Apps that look up their own package name in custom resource paths or external integrations may misbehave.
+- `sharedUserId` apps get a separate Linux user for the clone, so data from the original is not visible.
+- Signature-level permissions declared by the app stop being granted to the clone after re-signing.
+- Apps that require extracted native libraries may fail if the merged APK cannot load them on that device.
 
-- JDK 17 (JDK 21+ is not supported by AGP 8.4.2 yet)
-- Android SDK with platform 34 and build-tools 34.0.0
-- An internet connection on the first build, to download Gradle and the
-  dependencies
+### What OpenClone deliberately does not do
+
+- No DEX or native-code patching.
+- No signature-check, SafetyNet, or Play Integrity bypass.
+- No device identifier spoofing. `Build.BRAND`, `Build.MODEL`, `Build.MANUFACTURER`, the network identity, and the IP address are properties of the phone and stay identical for every app on it. Only the advertising ID can be affected, and only by removing the `AD_ID` permission from the clone.
+- No root, no Xposed, no hooking framework.
+
+OpenClone is meant for personal use with apps you are entitled to use. Do not use it to pirate apps, bypass paid features, commit fraud, or violate an app's terms or licence.
+
+## Privacy and security
+
+- All APK processing happens on the device.
+- No account, no remote cloning server, no `INTERNET` permission in the manifest.
+- No advertising or analytics SDK in the dependencies.
+- The optional custom icon is read through Android's Storage Access Framework for a single picked image; no broad media or storage permission is requested.
+- Generated APKs, clone metadata, and the signing keystore live in OpenClone's private app storage.
+
+### Signing key: back it up
+
+OpenClone creates one PKCS#12 keystore on first use and reuses that key for every clone. It is stored as `openclone-keystore.p12` in private app storage, with its internal password kept in private `SharedPreferences`.
+
+**If the key is lost, existing clones cannot be updated in place.** They must be uninstalled and reinstalled, which deletes their app data.
+
+Use **Settings → Kunci Penandatangan → Ekspor kunci** to save a password-protected backup before clearing app data, uninstalling OpenClone, or moving to another phone. On the new device, use **Impor kunci** to restore it. The exported file is protected only by the password you choose, so store it somewhere safe.
+
+## Tech stack
+
+| Area | Technology |
+|---|---|
+| Language | Kotlin 1.9.24 |
+| Android build | Android Gradle Plugin 8.4.2, Gradle 8.7 |
+| UI | Android Views, XML layouts, Material Components 1.12.0, RecyclerView, View Binding |
+| Async work | Kotlin Coroutines 1.8.1 |
+| APK and resource processing | [REAndroid ARSCLib](https://github.com/REAndroid/ARSCLib) 1.4.0 |
+| APK signing | [AOSP apksig](https://android.googlesource.com/platform/tools/apksig/) 8.5.2 |
+| Certificate and keystore handling | [Bouncy Castle](https://www.bouncycastle.org/) 1.78.1 |
+| Unit tests | JUnit 4.13.2 |
+
+## Build from source
+
+### Requirements
+
+- JDK 17 (AGP 8.4.2 does not support JDK 21+).
+- Android SDK Platform 34.
+- Android SDK Build-Tools 34.0.0.
+- Internet access on the first build so Gradle can download dependencies.
+
+### Build a debug APK
 
 ```bash
 git clone https://github.com/Nbill27/openclone.git
 cd openclone
 ./gradlew assembleDebug
-# APK is at app/build/outputs/apk/debug/app-debug.apk
+```
+
+The APK is written to:
+
+```text
+app/build/outputs/apk/debug/app-debug.apk
 ```
 
 On Windows:
@@ -114,379 +237,107 @@ On Windows:
 gradlew.bat assembleDebug
 ```
 
-Or open this folder in Android Studio (Ladybug or newer) and press Run.
+If Gradle cannot find the Android SDK, set `ANDROID_HOME` or `ANDROID_SDK_ROOT`, or create a `local.properties` file with your SDK path. Do not commit `local.properties`.
 
-If Gradle cannot find the SDK, set `ANDROID_HOME` (or `ANDROID_SDK_ROOT`), or
-create `local.properties` containing:
-
-```properties
-sdk.dir=C\:\\Users\\NAME\\AppData\\Local\\Android\\Sdk
-```
-
-`local.properties` is already in `.gitignore`; do not commit it.
-
-For a release build signed with your own key, add `signingConfigs` to
-`app/build.gradle.kts` and use `./gradlew assembleRelease`. CI release builds
-use the debug key so the APK on the Releases page can be installed directly.
-
-## Usage
-
-Three steps, three screens.
-
-1. **Pick an app.** Open OpenClone, find the app in the list, tap it.
-2. **Configure the clone.** The clone name and package are already filled in.
-   Optionally replace the icon from the gallery; leave it empty to keep the
-   original icon. Make sure the clone package is not already used by another
-   app.
-3. **Tap CLONE**, wait for it to finish, then tap **INSTALL**.
-
-Finished clones are stored in the app's internal storage
-(`files/clones/<package>.apk`) and can be re-installed or shared from the result
-screen.
-
-## Project layout
-
-This is a single-module Android project (`:app`) with no internal libraries, so
-it can be read top to bottom.
-
-```
-openclone/
-├── .github/
-│   └── workflows/
-│       └── build.yml              # CI: unit test → lint → assemble → artifact/release
-├── app/
-│   ├── build.gradle.kts           # Module config: SDK, dependencies, viewBinding
-│   ├── proguard-rules.pro         # R8 rules (minify is currently disabled)
-│   └── src/
-│       ├── main/
-│       │   ├── AndroidManifest.xml
-│       │   ├── java/dev/bill/openclone/
-│       │   │   ├── MainActivity.kt
-│       │   │   ├── CloneActivity.kt
-│       │   │   ├── CloneEngine.kt
-│       │   │   ├── CloneConfig.kt
-│       │   │   ├── CloneStore.kt
-│       │   │   ├── KeystoreManager.kt
-│       │   │   ├── AppRepository.kt
-│       │   │   ├── AppIcons.kt
-│       │   │   ├── AppListAdapter.kt
-│       │   │   ├── InstalledApp.kt
-│       │   │   └── ManifestNaming.kt
-│       │   └── res/
-│       │       ├── layout/        # activity_main, activity_clone, item_app
-│       │       ├── values/        # strings, colors, themes
-│       │       ├── xml/           # file_paths.xml (FileProvider)
-│       │       ├── drawable-xxxhdpi/  # foreground + monochrome adaptive icon
-│       │       └── mipmap-*/      # legacy + round launcher icons, all densities
-│       └── test/java/dev/bill/openclone/
-│           ├── CloneConfigTest.kt
-│           └── ManifestNamingTest.kt
-├── apk/
-│   ├── OpenClone-0.1.0-debug.apk  # ready-to-install APK
-│   └── README.md                  # version, checksum, install steps
-├── gradle/wrapper/                # Gradle 8.7 wrapper
-├── build.gradle.kts               # AGP 8.4.2 + Kotlin 1.9.24 plugin versions
-├── settings.gradle.kts            # Project name, repositories, :app module
-├── gradle.properties              # Gradle heap, AndroidX, Kotlin style
-├── gradlew / gradlew.bat          # Gradle wrapper
-├── LICENSE                        # MIT
-└── README.md
-```
-
-### What each source file does
-
-| File | Responsibility |
-| --- | --- |
-| `MainActivity.kt` | Screen 1, "Pick an app". Loads the list in `onResume`, filters as you type, opens the clone screen. |
-| `CloneActivity.kt` | Screens 2 and 3, "Configure clone" and the result. Runs the clone in a coroutine, shows progress, installs the APK through `PackageInstaller` (falling back to `ACTION_VIEW`), shares the APK, and restores state after rotation. |
-| `CloneEngine.kt` | The core work: copy APK/splits, merge with ARSCLib, rewrite the package name, rewrite the label, replace the icon, strip old signatures, force `resources.arsc` to STORED, write the APK, sign v1/v2/v3. A single `suspend` function with cancellation checkpoints. |
-| `CloneConfig.kt` | Data models (`CloneConfig`, `CloneResult`, `CloneRecord`) plus pure helpers: clone name/package suggestions, package name validation. |
-| `CloneStore.kt` | Clone history as a single JSON file in private storage. Access is serialized with a process-wide lock, writes are atomic through a `.tmp` file then rename. |
-| `KeystoreManager.kt` | Creates and loads the signing key (PKCS12) at `files/openclone-keystore.p12`, with a random password in private `SharedPreferences`. |
-| `AppRepository.kt` | Scans installed apps: one bulk `getInstalledPackages` for versions, filters null `sourceDir`, caches for 15 seconds, `invalidate()` after a successful install. |
-| `AppIcons.kt` | Lazy per-row icon cache. Drawables are rasterized into small bitmaps and kept in an `LruCache` capped at 8 MB. |
-| `AppListAdapter.kt` | RecyclerView adapter with `DiffUtil` (identity `packageName@sourceDir`); icons load on bind. |
-| `InstalledApp.kt` | Model for one installed app, without `Drawable`, with lazy `lowerLabel`/`searchKey` for filtering. |
-| `ManifestNaming.kt` | Pure text rules for manifest renaming: declared permissions, provider `authorities`, `android:permission`, `android:process`. Split out so it can be tested without an APK. |
-
-### What each resource does
-
-| Path | Contents |
-| --- | --- |
-| `res/layout/activity_main.xml` | Title, About button, search field, app list. |
-| `res/layout/activity_clone.xml` | Icon, clone name, clone package, icon picker, CLONE/INSTALL/SHARE buttons. |
-| `res/layout/item_app.xml` | One list row: 48dp icon, name, package, version metadata. |
-| `res/values/strings.xml` | All UI text (Indonesian). Add new strings here, never hardcode them in layouts. |
-| `res/values/colors.xml` | `openclone_blue` and `ic_launcher_background`. |
-| `res/values/themes.xml` | Material 3 DayNight theme without an ActionBar. |
-| `res/xml/file_paths.xml` | Paths that may be shared through FileProvider (`clones/` and cache). |
-| `res/mipmap-anydpi-v26/` | Adaptive icon XML for API 26+. |
-| `res/mipmap-*dpi/` | Legacy and round icons for each density. |
-| `res/drawable-xxxhdpi/` | Foreground and monochrome adaptive icon (single raster). |
-
-## How it works
-
-Android has no API to "run an app twice". The trick is to build a second app
-that Android considers genuinely different.
-
-### Clone pipeline
-
-`CloneEngine.clone()` runs sequentially, calling `ensureActive()` before every
-heavy step:
-
-1. **Copy** `ApplicationInfo.sourceDir` (and all splits) into the cache dir.
-2. **Load** the APK with `ApkModule`/`ApkBundle`; splits are merged into one
-   module, a single APK is loaded directly.
-3. **Rewrite the package name** through `setPackageName`, then `ManifestNaming`
-   cleans up identifiers that must be unique per app:
-   - `<permission>` / `<permission-tree>` / `<permission-group>` entries that
-     use the old package are renamed, including their `uses-permission`
-     declarations.
-   - Provider `authorities` are split on `;`; ones already under the new package
-     are left alone, ones still on the old package get their prefix swapped, and
-     bare names (for example `com.facebook.appmanager`) are given the new
-     package namespace.
-   - `android:permission` and `android:process` on components are adjusted too.
-   - Component class names are **never** renamed.
-4. **Rewrite the label.**
-5. **Replace the icon** when the user picked an image: decode, center-crop,
-   rewrite the launcher icon entry inside the APK.
-6. **Strip old signatures** selectively: `META-INF/*.SF`, `*.RSA`, `*.DSA`,
-   `*.EC`, `MANIFEST.MF`, `SIG-*`. `META-INF/services` and `*.kotlin_module` are
-   kept because ServiceLoader and Kotlin need them.
-7. **Force `resources.arsc` to STORED** (`isUncompressed = true`). Android 11+
-   rejects a compressed or unaligned `resources.arsc`.
-8. **Write the APK** to a temporary file.
-9. **Sign** v1 + v2 + v3 with apksig, into a `.tmp` file.
-10. **Publish atomically**: rename `.tmp` to the final `<package>.apk`.
-
-Cleanup (`module.destroy()`, removing the work dir) always runs in `finally`,
-including when the coroutine is cancelled.
-
-### Coroutine and threading rules
-
-- `clone()` is `suspend` and is called from a single scope in `CloneActivity`
-  (`Dispatchers.Default`, since the work is CPU + disk).
-- Progress is reported through a `suspend (String) -> Unit`; the callback hops to
-  `Dispatchers.Main.immediate` itself, so there is no stray coroutine per
-  progress line.
-- All `PackageManager` lookups, file reads/writes, and icon decoding happen on
-  `Dispatchers.IO`/`Default`, never on the main thread.
-- `CancellationException` is always rethrown, never swallowed by
-  `catch (Exception)`.
-- After the scan completes, the activity checks `isFinishing || isDestroyed`
-  before touching views.
-
-### Storage and consistency
-
-- Clone history (`clones.json`) is written through a `.tmp` file then renamed,
-  under a process-wide lock, so two activities cannot overwrite each other.
-- Result APKs are signed into `.tmp` then renamed, so a crash mid-signing cannot
-  corrupt an existing clone.
-- The app scan is cached for 15 seconds in `AppRepository`; the cache is
-  invalidated after every successful clone install.
-
-### App list performance
-
-- The scan only reads package metadata (one bulk call), without `loadIcon` or
-  `loadLabel` per package.
-- Icons load when a row is actually bound, are rasterized to screen size, and are
-  stored in a byte-bounded cache.
-- `DiffUtil` is used when the list changes; there is no
-  `notifyDataSetChanged`.
-
-## Signing key: read this first
-
-Once the key is lost, installed clones can no longer be updated; they must be
-uninstalled and reinstalled, losing their data.
-
-That is why OpenClone creates **one** key on first launch, stores it at
-`files/openclone-keystore.p12` in the app's private storage, and uses that same
-key for every clone.
-
-**Back up that keystore file.** If you reinstall OpenClone or move to a new phone
-without bringing the keystore along, old clones can no longer be updated.
-
-## Testing and CI
-
-Unit tests run on the JVM, with no device and no APK:
+### Run checks
 
 ```bash
 ./gradlew testDebugUnitTest
-```
-
-What is covered:
-
-- `ManifestNamingTest` — rename rules for `authorities`, permissions, process,
-  including already-renamed and bare-name cases.
-- `CloneConfigTest` — `klon1..n` package suggestions, package name validation,
-  label suggestions.
-
-Lint and build:
-
-```bash
 ./gradlew lintDebug
 ./gradlew assembleDebug
 ```
 
-GitHub Actions (`.github/workflows/build.yml`) runs the same sequence for every
-push to `main` and every pull request:
+GitHub Actions runs unit tests, Android lint, and the debug build on pushes to `main` and on pull requests. Tags matching `v*.*.*` publish a GitHub Release with the generated APK attached.
 
-1. `testDebugUnitTest`
-2. `lintDebug`
-3. `assembleDebug`
-4. upload the APK as an artifact
+## Project structure
 
-Tags matching `v*.*.*` (for example `v0.1.0`) trigger a release job that creates
-a GitHub Release and attaches the APK.
+```text
+openclone/
+├── .github/workflows/build.yml
+├── apk/
+│   ├── OpenClone-0.1.0-debug.apk
+│   └── README.md
+├── app/src/main/
+│   ├── AndroidManifest.xml
+│   ├── java/dev/bill/openclone/
+│   │   ├── MainActivity.kt          # App list tab, search, entry point
+│   │   ├── AppPickerActivity.kt     # Full-screen app picker with search
+│   │   ├── CloneConfigActivity.kt   # Clone name, package, icon, advanced options
+│   │   ├── CloneProgressActivity.kt # Progress steps, result, notes, install/share
+│   │   ├── HistoryActivity.kt       # Saved clones, search, reinstall, share, delete
+│   │   ├── SettingsActivity.kt      # Preferences, keystore export/import, about link
+│   │   ├── AboutActivity.kt         # Version, licence, credits
+│   │   ├── CloneEngine.kt           # APK merge, rewrite, notes, signing pipeline
+│   │   ├── CloneConfig.kt           # Clone models, validation, suggestions
+│   │   ├── CloneStore.kt            # Local clone metadata storage
+│   │   ├── KeystoreManager.kt       # Persistent key, export and import
+│   │   ├── ManifestNaming.kt        # Manifest identifier rewrite rules
+│   │   ├── AppRepository.kt         # Installed-app discovery and cache
+│   │   ├── AppIcons.kt              # Lazy icon loading and LRU cache
+│   │   ├── AppListAdapter.kt        # Main list adapter
+│   │   ├── AppPickerAdapter.kt      # Grid picker adapter
+│   │   ├── HistoryAdapter.kt        # History list adapter
+│   │   ├── BottomNavView.kt         # Shared bottom navigation
+│   │   ├── RingProgressView.kt      # Circular progress indicator
+│   │   └── InstalledApp.kt          # Installed-app model
+│   └── res/
+│       ├── layout/                  # One layout per screen, plus dialogs and items
+│       ├── drawable/                # Icons, backgrounds, progress rings
+│       ├── values/                  # Strings (Indonesian UI), colours, themes
+│       ├── xml/                     # FileProvider paths
+│       └── mipmap-*/                # Launcher icons
+├── app/src/test/java/dev/bill/openclone/
+│   ├── CloneConfigTest.kt
+│   └── ManifestNamingTest.kt
+├── docs/images/                     # README artwork and screenshots
+├── gradle/wrapper/
+├── build.gradle.kts
+├── settings.gradle.kts
+└── README.md
+```
 
-## Limitations
+## Tests
 
-- Apps that check their own signature, use SafetyNet / Play Integrity, or have
-  anti-tamper protection (banking, some games) will reject a re-signed copy.
-  Working around that needs DEX/native patching, which is out of scope here.
-- Only the package name inside `resources.arsc` is changed. Apps that read their
-  package name from resources instead of `Context.getPackageName()` may behave
-  oddly.
-- A clone has to be installed as a regular APK, so the phone must allow
-  **Install unknown apps** for OpenClone.
-- Clones cannot be updated through the Play Store: their package and signature
-  differ.
-- No root. Everything uses public Android APIs.
-- Do not publish clones to the Play Store, and do not clone apps to pirate,
-  defraud, or violate their license. This project is for personal use on your own
-  phone.
+The JVM unit tests cover the pure configuration and manifest-naming rules:
 
-## FAQ
+- `CloneConfigTest` — package-name validation, suggested clone label, and package suffix selection.
+- `ManifestNamingTest` — permission names, provider authorities, process names, signature-file detection, and idempotent renaming.
 
-**Does OpenClone need root?**
-No.
-
-**Can a clone update itself from the Play Store?**
-No. A clone has a different package and signature. To update, clone the new
-version of the app again, or reinstall the new clone APK.
-
-**Why does app X force close after cloning?**
-Usually because the app checks its signature or detects modification. See
-[Limitations](#limitations).
-
-**Is my account data in the original app safe?**
-Yes. OpenClone only copies the APK file, not app data. A clone starts as a fresh
-install.
-
-**Why is my clone package rejected?**
-The package must have at least two segments, may only contain letters, digits,
-and underscores, and each segment may not start with a digit. A valid example is
-`com.example.app.klon1`.
-
-**Can the original icon be kept?**
-Yes. Leave the icon picker empty; the engine only replaces the icon when an image
-was selected.
+They do not replace device testing. Installation behaviour and runtime compatibility still have to be checked on real phones, against the apps being cloned.
 
 ## Contributing
 
-Contributions are welcome from anyone: bug reports, documentation fixes,
-translations, and new features.
+Bug reports, documentation fixes, translations, tests, and code changes are welcome.
 
-### Before you start
+When reporting a problem, include where possible:
 
-- For large changes or new features, open an issue first so the direction is
-  clear.
-- For bugs, include: Android version, phone brand/model, the cloned app's name,
-  reproduction steps, and logs (`adb logcat`) if available.
-- Do not attach APKs of paid apps or personal data to issues.
+- Android version and device model.
+- Source app name and version.
+- The clone package name used.
+- Steps to reproduce.
+- Relevant `adb logcat` output with personal information removed.
 
-### Workflow
+For code changes, run the [checks](#run-checks) and describe how the change was tested. Keep changes focused and avoid adding Android permissions or large dependencies without a clear reason.
 
-```bash
-# 1. Fork the repo on GitHub, then clone your fork
-git clone https://github.com/<username>/openclone.git
-cd openclone
+### Project boundaries
 
-# 2. Create a branch from main
-git checkout -b fix/icon-cache-eviction
-
-# 3. Make your changes, then run the checks
-./gradlew testDebugUnitTest lintDebug assembleDebug
-
-# 4. Commit and push
-git add -A
-git commit -m "fix: cap the icon cache by byte size"
-git push origin fix/icon-cache-eviction
-```
-
-Then open a pull request against `main`.
-
-### Commit conventions
-
-Use [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-feat: adaptive icon support for clones
-fix: prevent the icon cache from growing unbounded
-perf: skip loadIcon during app scan
-docs: clarify the Windows install steps
-test: add authorities cases containing dots
-refactor: extract manifest rename rules
-chore: bump the Gradle wrapper
-```
-
-Commit messages may be in English or Indonesian; just stay consistent within a
-single PR.
-
-### Code rules
-
-- **Kotlin, no new Java.** Follow the style of the surrounding files.
-- **UI strings always live in `res/values/strings.xml`**, never hardcoded in
-  layouts or code. The current UI language is Indonesian.
-- **Comments and API names in English.** Comments explain *why*, not restate
-  *what* the code already shows.
-- **Heavy work never runs on the main thread.** Use `suspend` plus the right
-  dispatcher; never swallow `CancellationException`.
-- **Write files atomically** (`.tmp` then rename) for data that must not be
-  corrupted.
-- **Do not add Android permissions** without discussing it in an issue. The
-  current permissions are only `QUERY_ALL_PACKAGES` and
-  `REQUEST_INSTALL_PACKAGES`.
-- **Do not add large dependencies** without a strong reason; explain it in the
-  PR.
-- **Non-goals that must not be violated:** DEX patching, signature bypass, Play
-  Integrity bypass, or any trick that circumvents Android security.
-- **Every testable text rule needs a unit test.** New logic in
-  `ManifestNaming`/`CloneConfig` must come with tests.
-
-### Pull request checklist
-
-- [ ] `./gradlew testDebugUnitTest` passes
-- [ ] `./gradlew lintDebug` adds no new errors/warnings
-- [ ] `./gradlew assembleDebug` produces an APK
-- [ ] UI changes were tested on a phone/emulator (mention the Android version)
-- [ ] New strings are in `strings.xml`
-- [ ] No build files, keystores, or `local.properties` are committed
-- [ ] The PR description explains the problem, the approach, and how to test
-
-### Contribution ideas
-
-- English (`values-en`) and other locale support.
-- Automatic package conflict detection before the CLONE button is pressed.
-- Keystore export/import from the history screen, so backups do not need ADB.
-- Staged progress indication (a percentage, not just text).
-- Instrumented tests for the install flow.
-- Better dark theme support and dynamic color.
+The project intentionally does not implement DEX or native-code patching, signature-check bypasses, Play Integrity bypasses, device-identifier spoofing, or root/Xposed hooks. Features that would require any of these are surfaced as honest warnings instead.
 
 ## Credits
 
-- [ARSCLib](https://github.com/REAndroid/ARSCLib) (Apache-2.0) for reading and
-  writing binary `AndroidManifest.xml` and `resources.arsc`.
-- [Apktool](https://github.com/iBotPeaches/Apktool) (Apache-2.0), APK format
-  reference and inspiration.
-- [apksig](https://maven.google.com/com/android/tools/build/apksig) from AOSP for
-  v1/v2/v3 signing.
-- [BouncyCastle](https://www.bouncycastle.org/) for self-signed certificates.
-- [AndroidX](https://developer.android.com/jetpack/androidx) and
-  [Material Components](https://github.com/material-components/material-components-android).
+Created by **Nabil Deja**.
+
+Built with open-source Android libraries and tools:
+
+- [REAndroid ARSCLib](https://github.com/REAndroid/ARSCLib) — APK resource and manifest processing.
+- [AOSP apksig](https://android.googlesource.com/platform/tools/apksig/) — APK signing.
+- [Bouncy Castle](https://www.bouncycastle.org/) — certificate and keystore utilities.
+- AndroidX, Material Components, Kotlin Coroutines, and JUnit.
+
+See [`app/build.gradle.kts`](app/build.gradle.kts) for exact versions.
 
 ## License
 
-MIT License, see the [`LICENSE`](LICENSE) file.
-Copyright (c) 2026 Muhammad Nabil Deja A.R.
+OpenClone is released under the [MIT License](LICENSE).
+
+Copyright (c) 2026 Nabil Deja.

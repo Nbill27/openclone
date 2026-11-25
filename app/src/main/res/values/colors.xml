@@ -1,6 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="openclone_blue">#1A73E8</color>
-    <!-- Deep charcoal behind the interlocking "CC" mark. -->
+
+    <!-- Canvas and depth -->
+    <color name="bg_canvas">#0D0D0F</color>
+    <color name="bg_wave_layer">#151518</color>
+    <color name="bg_surface">#18181B</color>
+    <color name="bg_elevated">#202024</color>
+
+    <!-- Borders -->
+    <color name="border_subtle">#2A2A2F</color>
+    <color name="border_input">#34343B</color>
+
+    <!-- Accent -->
+    <color name="accent_white">#FFFFFF</color>
+    <color name="text_on_white">#0D0D0F</color>
+
+    <!-- Text -->
+    <color name="text_secondary">#9A9AA0</color>
+    <color name="text_muted">#68686F</color>
+    <color name="warning_text">#FFB74D</color>
+
+    <!-- Controls -->
+    <color name="switch_off_bg">#323238</color>
+    <color name="switch_off_thumb">#9A9AA0</color>
+    <color name="nav_bg">#161619</color>
+    <color name="nav_border">#26262A</color>
+
+    <!-- Ripples -->
+    <color name="ripple_white_8">#14FFFFFF</color>
+    <color name="ripple_dark_12">#1F0D0D0F</color>
+    <color name="ripple_on_dark">#14FFFFFF</color>
+    <color name="ripple_on_white">#1F0D0D0F</color>
+
+    <!-- Wave ladder -->
+    <color name="wave_a">#141417</color>
+    <color name="wave_b">#1B1B1F</color>
+
+    <!-- Brand tile -->
+    <color name="brand_tile_bg">#141417</color>
+
     <color name="ic_launcher_background">#282828</color>
 </resources>

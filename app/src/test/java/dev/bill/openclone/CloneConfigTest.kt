@@ -10,7 +10,7 @@ class CloneConfigTest {
     @Test
     fun `valid package names are accepted`() {
         assertTrue(isValidPackageName("com.example.app"))
-        assertTrue(isValidPackageName("com.facebook.aura.klon1"))
+        assertTrue(isValidPackageName("com.facebook.aura.clone1"))
         assertTrue(isValidPackageName("dev.bill.openclone"))
         assertTrue(isValidPackageName("a.b"))
         assertTrue(isValidPackageName("com.app2_name.x"))
@@ -29,9 +29,9 @@ class CloneConfigTest {
     }
 
     @Test
-    fun `suggestClonePackage appends klon1 when free`() {
+    fun `suggestClonePackage appends clone1 when free`() {
         assertEquals(
-            "com.example.app.klon1",
+            "com.example.app.clone1",
             suggestClonePackage("com.example.app", setOf("com.other.app")),
         )
     }
@@ -39,32 +39,32 @@ class CloneConfigTest {
     @Test
     fun `suggestClonePackage increments until free`() {
         assertEquals(
-            "com.example.app.klon3",
+            "com.example.app.clone3",
             suggestClonePackage(
                 "com.example.app",
-                setOf("com.example.app.klon1", "com.example.app.klon2"),
+                setOf("com.example.app.clone1", "com.example.app.clone2"),
             ),
         )
     }
 
     @Test
-    fun `suggestClonePackage keeps original when it already is a clone base`() {
+    fun `suggestClonePackage ignores unrelated existing packages`() {
         assertEquals(
-            "com.example.app.klon1",
+            "com.example.app.clone1",
             suggestClonePackage("com.example.app", emptySet()),
         )
     }
 
     @Test
-    fun `suggestCloneLabel appends 2`() {
-        assertEquals("Muse 2", suggestCloneLabel("Muse"))
-        assertEquals("BCA mobile 2", suggestCloneLabel("BCA mobile"))
+    fun `suggestCloneLabel appends the Clone 1 suffix`() {
+        assertEquals("Muse (Clone 1)", suggestCloneLabel("Muse"))
+        assertEquals("BCA mobile (Clone 1)", suggestCloneLabel("BCA mobile"))
     }
 
     @Test
     fun `suggestClonePackage keeps counting past nine`() {
-        val taken = (1..9).map { "com.example.app.klon$it" }.toSet()
-        assertEquals("com.example.app.klon10", suggestClonePackage("com.example.app", taken))
+        val taken = (1..9).map { "com.example.app.clone$it" }.toSet()
+        assertEquals("com.example.app.clone10", suggestClonePackage("com.example.app", taken))
     }
 
     @Test
@@ -83,4 +83,3 @@ class CloneConfigTest {
         assertTrue(isValidPackageName(suggestClonePackage("com.example.app", emptySet())))
     }
 }
-
