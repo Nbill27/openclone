@@ -140,14 +140,15 @@ class SettingsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val info = withContext(Dispatchers.IO) { keystoreManager.describeKey() }
             if (isFinishing || isDestroyed) return@launch
-            binding.keystoreStatus.text = if (info == null) {
-                getString(R.string.settings_keystore_status_none)
-            } else {
-                getString(
+            binding.keystoreStatus.text = when {
+                info != null -> getString(
                     R.string.settings_keystore_value_format,
                     dateFormat.format(Date(info.validFrom)),
                     dateFormat.format(Date(info.validUntil)),
                 )
+                keystoreManager.keystoreExists() ->
+                    getString(R.string.settings_keystore_status_unreadable)
+                else -> getString(R.string.settings_keystore_status_none)
             }
         }
     }
@@ -157,7 +158,15 @@ class SettingsActivity : AppCompatActivity() {
             val info = withContext(Dispatchers.IO) { keystoreManager.describeKey() }
             if (isFinishing || isDestroyed) return@launch
             if (info == null) {
-                toast(getString(R.string.keystore_no_key_yet))
+                toast(
+                    getString(
+                        if (keystoreManager.keystoreExists()) {
+                            R.string.keystore_error_unreadable
+                        } else {
+                            R.string.keystore_no_key_yet
+                        },
+                    ),
+                )
                 return@launch
             }
             val body = getString(
@@ -270,6 +279,7 @@ class SettingsActivity : AppCompatActivity() {
         "PASSWORD_TOO_SHORT" -> getString(R.string.keystore_error_short)
         "INVALID_PASSWORD_OR_FILE" -> getString(R.string.keystore_error_wrong)
         "NO_PRIVATE_KEY", "NO_CERTIFICATE" -> getString(R.string.keystore_error_nokey)
+        KeystoreManager.ERROR_KEY_UNREADABLE -> getString(R.string.keystore_error_unreadable)
         else -> getString(R.string.keystore_error_unknown)
     }
 

@@ -92,7 +92,7 @@
     <string name="share_chooser_title">Bagikan APK clone</string>
     <string name="compat_title">Catatan kompatibilitas</string>
     <string name="note_bullet">• %1$s</string>
-    <string name="compat_shared_user_id">Aplikasi memakai sharedUserId. Clone akan mendapat identitas pengguna terpisah, jadi data lama tidak terbaca.</string>
+    <string name="compat_shared_user_id">Aplikasi memakai sharedUserId. Atribut itu dihapus dari clone agar bisa dipasang berdampingan; data aplikasi asli tidak terbaca.</string>
     <string name="compat_signature_permission">Aplikasi mendeklarasikan izin bertingkat signature. Izin itu tidak lagi berlaku setelah APK ditandatangani ulang.</string>
     <string name="compat_extract_native_libs">Aplikasi mensyaratkan library native yang diekstrak. Kalau clone gagal membuka library, versi ini tidak cocok untuk perangkat ini.</string>
     <string name="compat_splits_merged">APK split digabung menjadi satu file. Semua resource ikut terbawa, ukuran clone jadi lebih besar.</string>
@@ -142,6 +142,7 @@
     <string name="settings_group_keystore">Kunci Penandatangan</string>
     <string name="settings_keystore_status">Kunci aktif</string>
     <string name="settings_keystore_status_none">Belum dibuat</string>
+    <string name="settings_keystore_status_unreadable">Tidak bisa dibaca</string>
     <string name="settings_keystore_status_desc">Ketuk untuk melihat detail kunci</string>
     <string name="settings_keystore_value_format">%1$s s/d %2$s</string>
     <string name="settings_keystore_export">Ekspor kunci</string>
@@ -160,6 +161,7 @@
     <string name="keystore_error_short">Kata sandi minimal 6 karakter.</string>
     <string name="keystore_error_wrong">Kata sandi salah atau file bukan cadangan kunci.</string>
     <string name="keystore_error_nokey">File tidak berisi kunci privat.</string>
+    <string name="keystore_error_unreadable">Kunci penandatangan tidak bisa dibaca. Pulihkan dari cadangan lewat Impor kunci, atau hapus data aplikasi untuk memulai kunci baru (clone lama tidak bisa diperbarui).</string>
     <string name="keystore_error_unknown">Terjadi kesalahan saat membaca file.</string>
     <string name="keystore_import_confirm_title">Ganti kunci aktif?</string>
     <string name="keystore_import_confirm_body">Kunci yang sekarang akan diganti dengan kunci dari file cadangan. Clone yang ditandatangani dengan kunci lama tidak bisa diperbarui, hanya bisa dipasang ulang.</string>

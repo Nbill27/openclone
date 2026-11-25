@@ -6,6 +6,7 @@ import com.reandroid.apk.ApkBundle
 import com.reandroid.apk.ApkModule
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock
 import com.reandroid.archive.ByteInputSource
+import com.reandroid.arsc.chunk.xml.ResXmlAttribute
 import com.reandroid.arsc.chunk.xml.ResXmlElement
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -81,6 +82,12 @@ class CloneEngine(private val context: Context) {
 
             onProgress("Mengganti package name...")
             ensureActive()
+            // Freeze component class names to the OLD package before the
+            // manifest package changes. Android resolves a relative name such
+            // as ".MainActivity" against the manifest package, but the DEX
+            // still contains classes under the old package, so leaving them
+            // relative makes the clone crash on launch.
+            expandRelativeClassNames(loaded, oldPackage)
             loaded.setPackageName(config.newPackage)
             rewriteManifestReferences(loaded, oldPackage, config.newPackage)
 
@@ -325,6 +332,12 @@ class CloneEngine(private val context: Context) {
             null
         } ?: return
 
+        // sharedUserId is tied to the signing certificate. Re-signing with the
+        // OpenClone key makes the clone incompatible with the original's
+        // shared user, so installing it next to the original fails. Dropping
+        // the attribute (and its label) lets the clone get its own user.
+        removeSharedUserId(manifest)
+
         val elements = manifest.recursiveElements()
         while (elements.hasNext()) {
             val element = elements.next()
@@ -337,6 +350,119 @@ class CloneEngine(private val context: Context) {
                 renameDeclaredPermission(element, oldPackage, newPackage)
             }
             rewriteElementAttributes(element, elementName, oldPackage, newPackage)
+        }
+    }
+
+    /**
+     * Expands every relative component class name to the old package before
+     * the manifest package is renamed. Without this, `android:name=".Foo"`
+     * would resolve to `<newPackage>.Foo` after the rename, while the DEX
+     * still defines `<oldPackage>.Foo`, and the clone would fail to start.
+     */
+    private fun expandRelativeClassNames(module: ApkModule, oldPackage: String) {
+        val manifest = try {
+            module.androidManifest
+        } catch (_: Exception) {
+            return
+        }
+        val elements = try {
+            manifest.recursiveElements()
+        } catch (_: Exception) {
+            return
+        }
+        while (elements.hasNext()) {
+            val element = try {
+                elements.next()
+            } catch (_: Exception) {
+                null
+            } ?: continue
+            val elementName = try {
+                element.name
+            } catch (_: Exception) {
+                null
+            } ?: continue
+            if (elementName !in CLASS_NAME_ELEMENTS) continue
+
+            val attrNames = CLASS_NAME_ATTRS + EXTRA_CLASS_NAME_ATTRS[elementName].orEmpty()
+            val attributes = try {
+                element.getAttributes()
+            } catch (_: Exception) {
+                continue
+            }
+            while (attributes.hasNext()) {
+                val attr = try {
+                    attributes.next()
+                } catch (_: Exception) {
+                    null
+                } ?: continue
+                val attrName = try {
+                    attr.name
+                } catch (_: Exception) {
+                    null
+                } ?: continue
+                if (attrName !in attrNames) continue
+                val value = try {
+                    attr.valueAsString
+                } catch (_: Exception) {
+                    null
+                } ?: continue
+                val expanded = expandClassName(value, oldPackage) ?: continue
+                try {
+                    attr.setValueAsString(expanded)
+                } catch (_: Exception) {
+                    // A single unreadable attribute is not fatal.
+                }
+            }
+        }
+    }
+
+    /** `.Foo` -> `oldPackage.Foo`, bare `Foo` -> `oldPackage.Foo`, else null. */
+    private fun expandClassName(value: String, oldPackage: String): String? {
+        if (value.isEmpty()) return null
+        // Resource references and theme references are not class names.
+        if (value.startsWith("@") || value.startsWith("?")) return null
+        if (value.startsWith("$oldPackage.")) return null
+        return when {
+            value.startsWith('.') -> oldPackage + value
+            !value.contains('.') -> "$oldPackage.$value"
+            else -> null
+        }
+    }
+
+    private fun removeSharedUserId(manifest: AndroidManifestBlock) {
+        val root = try {
+            manifest.manifestElement
+        } catch (_: Exception) {
+            return
+        }
+        val targets = mutableListOf<ResXmlAttribute>()
+        val attributes = try {
+            root.getAttributes()
+        } catch (_: Exception) {
+            return
+        }
+        while (attributes.hasNext()) {
+            val attr = try {
+                attributes.next()
+            } catch (_: Exception) {
+                null
+            } ?: continue
+            val name = try {
+                attr.name
+            } catch (_: Exception) {
+                null
+            } ?: continue
+            if (name == ATTR_SHARED_USER_ID || name == ATTR_SHARED_USER_LABEL) {
+                targets += attr
+            }
+        }
+        targets.forEach { attr ->
+            try {
+                root.removeAttribute(attr)
+            } catch (_: Exception) {
+                // Nothing else to do: the clone may fail to install beside
+                // the original, which the compatibility note warns about.
+            }
         }
     }
 
@@ -498,10 +624,32 @@ class CloneEngine(private val context: Context) {
         private const val ATTR_AUTHORITIES = "authorities"
         private const val ATTR_PROCESS = "process"
         private const val ATTR_SHARED_USER_ID = "sharedUserId"
+        private const val ATTR_SHARED_USER_LABEL = "sharedUserLabel"
         private const val ATTR_PROTECTION_LEVEL = "protectionLevel"
         private const val ELEMENT_PERMISSION = "permission"
         private const val PROTECTION_SIGNATURE = "signature"
         private const val AD_ID_PERMISSION = "com.google.android.gms.permission.AD_ID"
+
+        /** Elements whose `android:name` is a class name. */
+        private val CLASS_NAME_ELEMENTS = setOf(
+            "application",
+            "activity",
+            "activity-alias",
+            "service",
+            "receiver",
+            "provider",
+            "instrumentation",
+        )
+
+        /** The common class-name attribute, `android:name`. */
+        private val CLASS_NAME_ATTRS = setOf(ATTR_NAME)
+
+        /** Extra class-name attributes that are not called `name`. */
+        private val EXTRA_CLASS_NAME_ATTRS = mapOf(
+            "application" to setOf("backupAgent", "manageSpaceActivity", "appComponentFactory"),
+            "activity" to setOf("parentActivityName"),
+            "activity-alias" to setOf("targetActivity"),
+        )
 
         /** Elements that declare a permission, so their name must be unique. */
         private val DECLARED_PERMISSION_ELEMENTS = setOf(

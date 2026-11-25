@@ -517,6 +517,8 @@ class CloneProgressActivity : AppCompatActivity() {
             raw.contains("INSTALL_FAILED_INSUFFICIENT_STORAGE", ignoreCase = true) ||
                 raw.contains("ENOSPC", ignoreCase = true) ->
                 getString(R.string.install_error_storage)
+            raw.contains(KeystoreManager.ERROR_KEY_UNREADABLE, ignoreCase = true) ->
+                getString(R.string.keystore_error_unreadable)
             else -> raw
         }
     }

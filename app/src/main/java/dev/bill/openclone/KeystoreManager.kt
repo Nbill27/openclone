@@ -67,30 +67,52 @@ class KeystoreManager(private val context: Context) {
     /**
      * Load the existing key, or generate and store a new one.
      * The keystore password is random, stored only in private SharedPreferences.
+     *
+     * If a keystore file exists but cannot be read, this throws instead of
+     * silently replacing it: overwriting would destroy the only key that can
+     * update the clones already signed with it.
      */
-    @Synchronized
-    fun getOrCreateKey(): SigningKey {
+    fun getOrCreateKey(): SigningKey = synchronized(LOCK) {
         val password = internalPassword()
         if (keystoreFile.exists()) {
-            try {
-                val ks = KeyStore.getInstance("PKCS12")
-                FileInputStream(keystoreFile).use { ks.load(it, password.toCharArray()) }
-                val key = ks.getKey(ALIAS, password.toCharArray()) as PrivateKey
-                val cert = ks.getCertificate(ALIAS) as X509Certificate
-                return SigningKey(key, cert)
-            } catch (_: Exception) {
-                // Corrupt keystore: fall through and generate a fresh one.
-                // Clones signed with the old key can no longer be updated,
-                // only reinstalled. That is unavoidable once the key is gone.
-            }
+            return@synchronized loadExistingKey(password)
         }
         val keyPair = generateKeyPair()
         val cert = selfSignedCertificate(keyPair)
+        writeKeystore(keyPair.private, cert, password)
+        SigningKey(keyPair.private, cert)
+    }
+
+    private fun loadExistingKey(password: String): SigningKey {
+        try {
+            val ks = KeyStore.getInstance("PKCS12")
+            FileInputStream(keystoreFile).use { ks.load(it, password.toCharArray()) }
+            val key = ks.getKey(ALIAS, password.toCharArray()) as? PrivateKey
+                ?: throw IllegalStateException(ERROR_KEY_UNREADABLE)
+            val cert = ks.getCertificate(ALIAS) as? X509Certificate
+                ?: throw IllegalStateException(ERROR_KEY_UNREADABLE)
+            return SigningKey(key, cert)
+        } catch (e: IllegalStateException) {
+            throw e
+        } catch (e: Exception) {
+            throw IllegalStateException(ERROR_KEY_UNREADABLE, e)
+        }
+    }
+
+    /** Writes a new keystore through a temp file so a crash cannot truncate it. */
+    private fun writeKeystore(privateKey: PrivateKey, certificate: X509Certificate, password: String) {
         val ks = KeyStore.getInstance("PKCS12")
         ks.load(null, password.toCharArray())
-        ks.setKeyEntry(ALIAS, keyPair.private, password.toCharArray(), arrayOf<Certificate>(cert))
-        FileOutputStream(keystoreFile).use { ks.store(it, password.toCharArray()) }
-        return SigningKey(keyPair.private, cert)
+        ks.setKeyEntry(ALIAS, privateKey, password.toCharArray(), arrayOf<Certificate>(certificate))
+        val temp = File(context.filesDir, "${keystoreFile.name}.new")
+        try {
+            FileOutputStream(temp).use { ks.store(it, password.toCharArray()) }
+            if (!temp.renameTo(keystoreFile)) {
+                temp.copyTo(keystoreFile, overwrite = true)
+            }
+        } finally {
+            if (temp.exists()) temp.delete()
+        }
     }
 
     /**
@@ -101,10 +123,10 @@ class KeystoreManager(private val context: Context) {
      * password before the store is written. The on-device keystore keeps
      * using its own random password and is not modified.
      */
-    @Synchronized
-    fun exportTo(out: OutputStream, userPassword: CharArray) {
+    fun exportTo(out: OutputStream, userPassword: CharArray) = synchronized(LOCK) {
         requirePassword(userPassword)
-        // Make sure a key exists before we try to export one.
+        // Make sure a key exists before we try to export one. An unreadable
+        // keystore throws here instead of exporting a brand-new key.
         val current = getOrCreateKey()
         val ks = KeyStore.getInstance("PKCS12")
         ks.load(null, userPassword)
@@ -120,8 +142,7 @@ class KeystoreManager(private val context: Context) {
      * is used. The store is re-written under a fresh internal password so
      * the backup password is never kept on the device.
      */
-    @Synchronized
-    fun importFrom(input: InputStream, userPassword: CharArray) {
+    fun importFrom(input: InputStream, userPassword: CharArray) = synchronized(LOCK) {
         requirePassword(userPassword)
         val source = KeyStore.getInstance("PKCS12")
         try {
@@ -148,22 +169,31 @@ class KeystoreManager(private val context: Context) {
         // Write to a temp file first so a failed write cannot destroy the
         // key that is currently signing clones.
         val temp = File(context.filesDir, "openclone-keystore.p12.import")
-        FileOutputStream(temp).use { target.store(it, internal.toCharArray()) }
-        if (!temp.renameTo(keystoreFile)) {
-            temp.copyTo(keystoreFile, overwrite = true)
-            temp.delete()
+        try {
+            FileOutputStream(temp).use { target.store(it, internal.toCharArray()) }
+            if (!temp.renameTo(keystoreFile)) {
+                temp.copyTo(keystoreFile, overwrite = true)
+            }
+        } finally {
+            if (temp.exists()) temp.delete()
         }
     }
 
-    /** Details of the stored key, or null when no key has been created yet. */
+    /**
+     * Details of the stored key, or null when no key has been created yet or
+     * the file cannot be read. Deliberately read-only: describing the key must
+     * never generate a replacement for one that is merely unreadable.
+     */
     fun describeKey(): KeyInfo? {
         if (!keystoreFile.exists()) return null
+        val password = storedPassword() ?: return null
         return try {
-            val key = getOrCreateKey()
-            val cert = key.certificate
+            val ks = KeyStore.getInstance("PKCS12")
+            FileInputStream(keystoreFile).use { ks.load(it, password.toCharArray()) }
+            val cert = ks.getCertificate(ALIAS) as? X509Certificate ?: return null
             KeyInfo(
                 subject = cert.subjectX500Principal.name,
-                algorithm = key.privateKey.algorithm,
+                algorithm = cert.publicKey.algorithm,
                 keySize = keySizeOf(cert),
                 validFrom = cert.notBefore.time,
                 validUntil = cert.notAfter.time,
@@ -196,11 +226,20 @@ class KeystoreManager(private val context: Context) {
         require(password.size >= MIN_PASSWORD_LENGTH) { "PASSWORD_TOO_SHORT" }
     }
 
-    private fun internalPassword(): String =
-        prefs.getString(PREF_PASSWORD, null)
-            ?: UUID.randomUUID().toString().also {
-                prefs.edit().putString(PREF_PASSWORD, it).apply()
-            }
+    private fun storedPassword(): String? = prefs.getString(PREF_PASSWORD, null)
+
+    /**
+     * Returns the on-device keystore password, creating it on first use.
+     * Uses [commit] rather than [apply]: a keystore written with a password
+     * that never reached disk would be permanently unreadable.
+     */
+    private fun internalPassword(): String {
+        storedPassword()?.let { return it }
+        val generated = UUID.randomUUID().toString()
+        val saved = prefs.edit().putString(PREF_PASSWORD, generated).commit()
+        if (!saved) throw IllegalStateException(ERROR_PASSWORD_UNSAVED)
+        return generated
+    }
 
     private fun generateKeyPair(): KeyPair {
         val gen = KeyPairGenerator.getInstance("RSA")
@@ -229,7 +268,15 @@ class KeystoreManager(private val context: Context) {
 
     companion object {
         const val MIN_PASSWORD_LENGTH = 6
+
+        /** Error token surfaced to the UI when the stored keystore is unreadable. */
+        const val ERROR_KEY_UNREADABLE = "KEYSTORE_UNREADABLE"
+
+        private const val ERROR_PASSWORD_UNSAVED = "KEYSTORE_PASSWORD_UNSAVED"
         private const val ALIAS = "openclone"
         private const val PREF_PASSWORD = "keystore_password"
+
+        /** Process-wide: every screen constructs its own KeystoreManager. */
+        private val LOCK = Any()
     }
 }
