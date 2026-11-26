@@ -83,7 +83,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.importKeystoreRow.setOnClickListener { startImport() }
 
         seedSwitch(binding.darkModeSwitch, prefs.getBoolean(KEY_DARK_MODE, true))
-        seedSwitch(binding.compatSwitch, prefs.getBoolean(KEY_COMPAT, false))
+        seedSwitch(binding.compatSwitch, prefs.getBoolean(KEY_COMPAT, true))
         seedSwitch(binding.autoSignSwitch, prefs.getBoolean(KEY_AUTO_SIGN, true))
 
         binding.darkModeSwitch.setOnCheckedChangeListener { _, checked ->
@@ -288,15 +288,19 @@ class SettingsActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    private companion object {
-        const val PREFS_NAME = "openclone_settings"
-        const val KEY_DARK_MODE = "dark_mode"
-        const val KEY_COMPAT = "compat_mode"
-        const val KEY_AUTO_SIGN = "auto_sign"
+    companion object {
+        private const val PREFS_NAME = "openclone_settings"
+        private const val KEY_DARK_MODE = "dark_mode"
+        private const val KEY_COMPAT = "compat_mode"
+        private const val KEY_AUTO_SIGN = "auto_sign"
 
         /** Mirrors the folder created by [CloneEngine]. */
-        const val CLONES_DIR = "clones"
+        private const val CLONES_DIR = "clones"
 
-        const val MIME_PKCS12 = "application/x-pkcs12"
+        private const val MIME_PKCS12 = "application/x-pkcs12"
+
+        fun isCompatModeEnabled(context: android.content.Context): Boolean =
+            context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .getBoolean(KEY_COMPAT, true)
     }
 }

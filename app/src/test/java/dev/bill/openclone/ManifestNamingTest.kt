@@ -6,8 +6,8 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-private const val OLD = "com.example.app"
-private const val NEW = "com.example.app.klon1"
+private const val OLD = "com.facebook.katana"
+private const val NEW = "com.facebook.katana.clone1"
 
 class ManifestNamingTest {
 
@@ -19,8 +19,8 @@ class ManifestNamingTest {
     @Test
     fun `authority under old package gets the prefix swapped`() {
         assertEquals(
-            "$NEW.provider",
-            ManifestNaming.renameAuthorities("$OLD.provider", OLD, NEW),
+            "$NEW.provider.KeyValueProvider",
+            ManifestNaming.renameAuthorities("$OLD.provider.KeyValueProvider", OLD, NEW),
         )
         assertEquals(
             "$NEW.work.FileProvider",
@@ -61,15 +61,64 @@ class ManifestNamingTest {
     }
 
     @Test
-    fun `process names derived from the old package are rewritten`() {
-        assertEquals("$NEW:remote", ManifestNaming.renameProcess("$OLD:remote", OLD, NEW))
+    fun `process names equal to or derived from old package are rewritten`() {
+        assertEquals(NEW, ManifestNaming.renameProcess(OLD, OLD, NEW))
+        assertEquals("$NEW:mqtt", ManifestNaming.renameProcess("$OLD:mqtt", OLD, NEW))
         assertEquals("$NEW.worker", ManifestNaming.renameProcess("$OLD.worker", OLD, NEW))
     }
 
     @Test
-    fun `unrelated process names are left untouched`() {
+    fun `unrelated or private colon process names are left untouched`() {
+        assertNull(ManifestNaming.renameProcess(":mqtt", OLD, NEW))
         assertNull(ManifestNaming.renameProcess("com.other:remote", OLD, NEW))
         assertNull(ManifestNaming.renameProcess("android:ui", OLD, NEW))
+    }
+
+    @Test
+    fun `taskAffinity is isolated per clone while empty and colon-prefixed names stay valid`() {
+        assertNull(ManifestNaming.renameTaskAffinity("", OLD, NEW))
+        // Leading-colon affinities are already scoped to newPackage by AOSP buildCompoundName!
+        assertNull(ManifestNaming.renameTaskAffinity(":browser", OLD, NEW))
+        assertNull(ManifestNaming.renameTaskAffinity(":video.pip", OLD, NEW))
+        assertEquals(NEW, ManifestNaming.renameTaskAffinity(OLD, OLD, NEW))
+        assertEquals("$NEW.composer", ManifestNaming.renameTaskAffinity("$OLD.composer", OLD, NEW))
+        assertEquals(":composer", ManifestNaming.renameTaskAffinity("$OLD:composer", OLD, NEW))
+        assertEquals(
+            "$NEW.com.facebook.task",
+            ManifestNaming.renameTaskAffinity("com.facebook.task", OLD, NEW),
+        )
+        // Foreign compound or non-letter-front affinities become valid :oc_... names!
+        assertEquals(
+            ":oc_com_facebook_orca_login",
+            ManifestNaming.renameTaskAffinity("com.facebook.orca:login", OLD, NEW),
+        )
+        assertEquals(
+            ":oc_123_task",
+            ManifestNaming.renameTaskAffinity("123_task", OLD, NEW),
+        )
+        assertNull(ManifestNaming.renameTaskAffinity(NEW, OLD, NEW))
+    }
+
+    @Test
+    fun `same-length vendor mutation avoids collisions when identifiers differ only in last 2 chars`() {
+        val used = mutableSetOf<String>()
+        val a1 = ManifestNaming.renameAuthorities(
+            value = "com.facebook.appmanager.prov1",
+            oldPackage = OLD,
+            newPackage = NEW,
+            sameLengthVendor = true,
+            usedTargets = used,
+        )
+        val a2 = ManifestNaming.renameAuthorities(
+            value = "com.facebook.appmanager.prov2",
+            oldPackage = OLD,
+            newPackage = NEW,
+            sameLengthVendor = true,
+            usedTargets = used,
+        )
+        assertEquals("com.facebook.appmanager.prov1".length, a1.length)
+        assertEquals("com.facebook.appmanager.prov2".length, a2.length)
+        assertFalse("Colliding authorities generated: $a1 == $a2", a1 == a2)
     }
 
     @Test
@@ -89,7 +138,15 @@ class ManifestNamingTest {
     fun `platform permissions are never renamed when ownership is required`() {
         assertNull(
             ManifestNaming.renamePermissionName(
-                "android.permission.CAMERA",
+                "android.permission.INTERNET",
+                OLD,
+                NEW,
+                mustBeOwned = true,
+            ),
+        )
+        assertNull(
+            ManifestNaming.renamePermissionName(
+                "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
                 OLD,
                 NEW,
                 mustBeOwned = true,
@@ -106,18 +163,15 @@ class ManifestNamingTest {
     }
 
     @Test
-    fun `bare declared permission name is namespaced when not ownership bound`() {
+    fun `bare and dotted vendor permission declarations are namespaced to prevent duplicate permission`() {
         assertEquals(
             "$NEW.READ_DATA",
             ManifestNaming.renamePermissionName("READ_DATA", OLD, NEW, mustBeOwned = false),
         )
-    }
-
-    @Test
-    fun `third party dotted permission declaration is left alone`() {
-        assertNull(
+        assertEquals(
+            "$NEW.com.facebook.permission.prod.FB_APP_COMMUNICATION",
             ManifestNaming.renamePermissionName(
-                "com.other.app.permission.SHARE",
+                "com.facebook.permission.prod.FB_APP_COMMUNICATION",
                 OLD,
                 NEW,
                 mustBeOwned = false,
@@ -126,9 +180,25 @@ class ManifestNamingTest {
     }
 
     @Test
+    fun `uses-permission matching a declared vendor permission is rewritten via lookup map`() {
+        val declared = mapOf(
+            "com.facebook.permission.prod.FB_APP_COMMUNICATION" to
+                "$NEW.com.facebook.permission.prod.FB_APP_COMMUNICATION",
+        )
+        assertEquals(
+            "$NEW.com.facebook.permission.prod.FB_APP_COMMUNICATION",
+            ManifestNaming.renamePermissionName(
+                "com.facebook.permission.prod.FB_APP_COMMUNICATION",
+                OLD,
+                NEW,
+                mustBeOwned = true,
+                declaredPermissions = declared,
+            ),
+        )
+    }
+
+    @Test
     fun `already renamed names are not prefixed a second time`() {
-        // The new package starts with the old one, so a missing guard would
-        // turn "com.example.app.klon1.X" into "com.example.app.klon1.klon1.X".
         assertNull(
             ManifestNaming.renamePermissionName(
                 "$NEW.permission.C2D_MESSAGE",
@@ -137,11 +207,12 @@ class ManifestNamingTest {
                 mustBeOwned = true,
             ),
         )
-        assertNull(ManifestNaming.renameProcess("$NEW:remote", OLD, NEW))
+        assertNull(ManifestNaming.renameProcess("$NEW:mqtt", OLD, NEW))
+        assertNull(ManifestNaming.renameProcess(NEW, OLD, NEW))
     }
 
     @Test
-    fun `signature files are detected`() {
+    fun `signature and Play Source Stamp files are detected`() {
         assertTrue(ManifestNaming.isSignatureEntry("META-INF/MANIFEST.MF"))
         assertTrue(ManifestNaming.isSignatureEntry("META-INF/CERT.SF"))
         assertTrue(ManifestNaming.isSignatureEntry("META-INF/CERT.RSA"))
@@ -149,6 +220,8 @@ class ManifestNamingTest {
         assertTrue(ManifestNaming.isSignatureEntry("META-INF/CERT.EC"))
         assertTrue(ManifestNaming.isSignatureEntry("META-INF/SIG-FOO"))
         assertTrue(ManifestNaming.isSignatureEntry("META-INF/cert.sf"))
+        assertTrue(ManifestNaming.isSignatureEntry("stamp-cert-sha256"))
+        assertTrue(ManifestNaming.isSignatureEntry("META-INF/stamp-cert-sha256"))
     }
 
     @Test

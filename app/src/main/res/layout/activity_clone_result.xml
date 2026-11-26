@@ -66,6 +66,7 @@
             </FrameLayout>
 
             <TextView
+                android:id="@+id/resultHeadline"
                 style="@style/Text.OpenClone.HeroHeading"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -74,6 +75,7 @@
                 android:text="@string/success_headline" />
 
             <TextView
+                android:id="@+id/resultSubtitle"
                 style="@style/Text.OpenClone.Detail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -82,8 +84,9 @@
                 android:lineSpacingExtra="3sp"
                 android:text="@string/success_subtitle" />
 
-            <!-- APK summary -->
+            <!-- Single APK summary -->
             <LinearLayout
+                android:id="@+id/singleSummaryCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
@@ -136,6 +139,25 @@
                         android:layout_marginTop="2dp"
                         tools:text="12,6 MB" />
                 </LinearLayout>
+            </LinearLayout>
+
+            <!-- Multi-clone batch summary list -->
+            <LinearLayout
+                android:id="@+id/batchListCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:id="@+id/batchResultList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
             </LinearLayout>
 
             <!-- Honest limitation note: clones get a different package name and
@@ -232,6 +254,7 @@
                 android:text="@string/install_app" />
 
             <LinearLayout
+                android:id="@+id/secondaryActionsRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"

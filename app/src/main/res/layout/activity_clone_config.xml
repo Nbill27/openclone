@@ -111,11 +111,84 @@
                     android:layout_height="wrap_content"
                     android:text="@string/config_section" />
 
+                <!-- Jumlah Clone -->
                 <TextView
                     style="@style/Text.OpenClone.Label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    android:text="@string/label_clone_count" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/decreaseCountButton"
+                        style="@style/Widget.OpenClone.IconButton"
+                        android:contentDescription="@string/cd_decrease_count"
+                        android:src="@drawable/ic_remove" />
+
+                    <EditText
+                        android:id="@+id/countInput"
+                        style="@style/Text.OpenClone.SectionTitle"
+                        android:layout_width="68dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_input"
+                        android:gravity="center"
+                        android:importantForAutofill="no"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:text="1"
+                        android:textColor="@color/accent_white"
+                        tools:ignore="Autofill,HardcodedText,LabelFor" />
+
+                    <ImageButton
+                        android:id="@+id/increaseCountButton"
+                        style="@style/Widget.OpenClone.IconButton"
+                        android:contentDescription="@string/cd_increase_count"
+                        android:src="@drawable/ic_add" />
+
+                    <HorizontalScrollView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:id="@+id/quickCountContainer"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal" />
+                    </HorizontalScrollView>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/batchSummaryText"
+                    style="@style/Text.OpenClone.Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="@color/accent_white"
+                    android:visibility="gone"
+                    tools:text="Otomatis membuat 3 salinan: Facebook (Clone 1) s/d Facebook (Clone 3)"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/nameFieldLabel"
+                    style="@style/Text.OpenClone.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
                     android:text="@string/label_app_name" />
 
                 <LinearLayout
@@ -207,23 +280,75 @@
                     android:layout_marginTop="14dp"
                     android:text="@string/label_app_icon" />
 
-                <ImageView
-                    android:id="@+id/iconPreview"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_icon_squircle"
-                    android:contentDescription="@string/cd_app_icon"
-                    android:padding="7dp"
-                    android:scaleType="fitCenter"
-                    tools:src="@mipmap/ic_launcher" />
+                    android:clipToPadding="false"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/iconPreviewContainer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/iconPreview"
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:background="@drawable/bg_icon_squircle"
+                            android:contentDescription="@string/cd_app_icon"
+                            android:padding="7dp"
+                            android:scaleType="fitCenter"
+                            tools:src="@mipmap/ic_launcher" />
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:clipToPadding="false"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/colorChipContainer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/Text.OpenClone.Detail"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/icon_badge_toggle" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/iconBadgeSwitch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:checked="true"
+                        android:contentDescription="@string/icon_badge_toggle" />
+                </LinearLayout>
 
                 <Button
                     android:id="@+id/changeIconButton"
                     style="@style/Widget.OpenClone.Button.Secondary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="6dp"
                     android:text="@string/change_icon" />
             </LinearLayout>
 

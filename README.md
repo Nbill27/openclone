@@ -101,11 +101,11 @@ Get the latest build from the [Releases page](https://github.com/Nbill27/openclo
 
 | Option | Details |
 |---|---|
-| Latest release | [Download app-debug.apk](https://github.com/Nbill27/openclone/releases/latest/download/app-debug.apk) |
-| APK included in the repository | [`apk/OpenClone-0.1.0-debug.apk`](apk/OpenClone-0.1.0-debug.apk) |
+| Latest release | [Download OpenClone-0.4.1-debug.apk](https://github.com/Nbill27/openclone/releases/latest) |
+| APK included in the repository | [`apk/OpenClone-0.4.1-debug.apk`](apk/OpenClone-0.4.1-debug.apk) |
 | Build from source | Follow [Build from source](#build-from-source) |
 
-The current `v0.1.0` release ships `app-debug.apk`, a **debug build intended for testing and personal use**, not a Play Store production release. Sizes and checksums are recorded in [`apk/README.md`](apk/README.md).
+The current `v0.4.1` release ships `OpenClone-0.4.1-debug.apk`, a **debug build intended for testing and personal use**, not a Play Store production release. Sizes and checksums are recorded in [`apk/README.md`](apk/README.md).
 
 ### Requirements on the phone
 
@@ -228,7 +228,7 @@ cd openclone
 The APK is written to:
 
 ```text
-app/build/outputs/apk/debug/app-debug.apk
+app/build/outputs/apk/debug/OpenClone-0.4.1-debug.apk
 ```
 
 On Windows:
@@ -255,7 +255,7 @@ GitHub Actions runs unit tests, Android lint, and the debug build on pushes to `
 openclone/
 ├── .github/workflows/build.yml
 ├── apk/
-│   ├── OpenClone-0.1.0-debug.apk
+│   ├── OpenClone-0.4.1-debug.apk
 │   └── README.md
 ├── app/src/main/
 │   ├── AndroidManifest.xml
