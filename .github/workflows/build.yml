@@ -15,6 +15,13 @@ jobs:
   build:
     name: Build APK
     runs-on: ubuntu-latest
+    env:
+      # Base64 of the release keystore. When the secret is absent (forks,
+      # pull requests) the job falls back to a debug build so CI still works.
+      KEYSTORE_B64: ${{ secrets.OPENCLONE_KEYSTORE_BASE64 }}
+      OPENCLONE_KEYSTORE_PASSWORD: ${{ secrets.OPENCLONE_KEYSTORE_PASSWORD }}
+      OPENCLONE_KEY_ALIAS: ${{ secrets.OPENCLONE_KEY_ALIAS }}
+      OPENCLONE_KEY_PASSWORD: ${{ secrets.OPENCLONE_KEY_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -45,14 +52,26 @@ jobs:
       - name: Run Android lint
         run: ./gradlew lintDebug --no-daemon
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Decode release keystore
+        if: env.KEYSTORE_B64 != ''
+        run: |
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/openclone-release.jks"
+          echo "OPENCLONE_KEYSTORE=$RUNNER_TEMP/openclone-release.jks" >> "$GITHUB_ENV"
+
+      - name: Build APK
+        run: |
+          if [ -n "$OPENCLONE_KEYSTORE" ]; then
+            ./gradlew assembleRelease --no-daemon
+          else
+            echo "::warning::No release keystore configured, building a debug APK."
+            ./gradlew assembleDebug --no-daemon
+          fi
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
-          name: OpenClone-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: OpenClone-apk
+          path: app/build/outputs/apk/*/*.apk
           if-no-files-found: error
 
   release:
@@ -66,7 +85,7 @@ jobs:
       - name: Download build artifact
         uses: actions/download-artifact@v8
         with:
-          name: OpenClone-debug-apk
+          name: OpenClone-apk
           path: dist
 
       - name: Create release and attach APK

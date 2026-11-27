@@ -10,9 +10,9 @@ traceable to a version and a commit.
 | --- | --- |
 | Latest version | [Releases — latest](https://github.com/Nbill27/openclone/releases/latest) |
 | Older versions | [All releases](https://github.com/Nbill27/openclone/releases) |
-| Just built one yourself | The `OpenClone-debug-apk` artifact of the latest [Actions run](https://github.com/Nbill27/openclone/actions) |
+| Just built one yourself | The `OpenClone-apk` artifact of the latest [Actions run](https://github.com/Nbill27/openclone/actions) |
 
-Each release attaches `OpenClone-<version>-debug.apk` and records its size and
+Each release attaches `OpenClone-<version>-release.apk` and records its size and
 SHA-256 in the release notes.
 
 ## How to install
@@ -26,15 +26,17 @@ SHA-256 in the release notes.
 Or through ADB, if the phone is connected and USB debugging is enabled:
 
 ```bash
-adb install -r OpenClone-<version>-debug.apk
+adb install -r OpenClone-<version>-release.apk
 ```
 
 ## Notes
 
-- These are **debug** builds, signed with a debug key. They are fine for personal
-  use; do not upload them to the Play Store.
-- Because each CI build uses a fresh debug key, a newer release cannot be
-  installed over an older one. Uninstall the old app first.
+- Releases are signed with a stable release key, so a newer version installs as
+  an update over the previous one without uninstalling.
+- The signing key is **not** in this repository. CI reads it from the
+  `OPENCLONE_KEYSTORE_BASE64`, `OPENCLONE_KEYSTORE_PASSWORD`,
+  `OPENCLONE_KEY_ALIAS`, and `OPENCLONE_KEY_PASSWORD` repository secrets. When
+  those secrets are missing, CI falls back to an unsigned-key debug build.
 - After installing, OpenClone itself needs the **Install unknown apps**
   permission, because the clones it produces are also installed as APKs.
 - These builds contain no ads, no tracking, and no network access.

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -9,6 +11,17 @@ val appVersionName = "0.4.3"
 base {
     archivesName.set("OpenClone-$appVersionName")
 }
+
+/**
+ * Release signing. The keystore and its passwords never live in the repository:
+ * locally they come from `signing.properties` at the project root, and in CI from
+ * OPENCLONE_KEYSTORE* environment variables. Without either, `assembleRelease`
+ * still works but produces an unsigned APK.
+ */
+val releaseSigningFile = rootProject.file("signing.properties")
+val releaseSigningFromFile = releaseSigningFile.isFile
+val releaseSigningFromEnv = !System.getenv("OPENCLONE_KEYSTORE").isNullOrBlank()
+val hasReleaseSigning = releaseSigningFromFile || releaseSigningFromEnv
 
 android {
     namespace = "dev.bill.openclone"
@@ -22,6 +35,27 @@ android {
         versionName = appVersionName
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                if (releaseSigningFromFile) {
+                    val props = Properties().apply {
+                        releaseSigningFile.inputStream().use { load(it) }
+                    }
+                    storeFile = rootProject.file(props.getProperty("storeFile"))
+                    storePassword = props.getProperty("storePassword")
+                    keyAlias = props.getProperty("keyAlias")
+                    keyPassword = props.getProperty("keyPassword")
+                } else {
+                    storeFile = file(System.getenv("OPENCLONE_KEYSTORE"))
+                    storePassword = System.getenv("OPENCLONE_KEYSTORE_PASSWORD")
+                    keyAlias = System.getenv("OPENCLONE_KEY_ALIAS")
+                    keyPassword = System.getenv("OPENCLONE_KEY_PASSWORD")
+                }
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -29,6 +63,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

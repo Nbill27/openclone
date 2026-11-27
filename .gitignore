@@ -12,3 +12,4 @@ app/build/
 *.keystore
 *.jks
 /openclone-keystore.p12
+signing.properties

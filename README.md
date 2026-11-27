@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Nbill27/openclone/releases/latest/download/app-debug.apk"><b> Download the latest APK</b></a>
+  <a href="https://github.com/Nbill27/openclone/releases/latest"><b> Download the latest APK</b></a>
   &nbsp;·&nbsp;
   <a href="https://github.com/Nbill27/openclone/releases">All releases</a>
   &nbsp;·&nbsp;
