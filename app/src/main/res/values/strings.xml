@@ -162,7 +162,7 @@
     <string name="settings_auto_sign_desc">Menandatangani APK secara otomatis</string>
     <string name="settings_group_info">Info</string>
     <string name="settings_about">Tentang OpenClone</string>
-    <string name="settings_about_desc">v0.4.2 • Versi, lisensi, dan kredit</string>
+    <string name="settings_about_desc">v0.4.3 • Versi, lisensi, dan kredit</string>
     <string name="settings_dark_only">OpenClone hanya tersedia dalam tema gelap.</string>
     <string name="settings_sign_required">APK harus ditandatangani agar bisa dipasang.</string>
     <string name="settings_storage_body">Clone disimpan di penyimpanan privat aplikasi:\n\n%1$s\n\nGunakan Riwayat Clone untuk memasang atau membagikan APK.</string>
@@ -208,7 +208,7 @@
 
     <!-- Tentang -->
     <string name="title_about">Tentang</string>
-    <string name="version_label">v0.4.2</string>
+    <string name="version_label">v0.4.3</string>
     <string name="version_label_format">v%1$s</string>
     <string name="about_link_unavailable">Tidak ada aplikasi untuk membuka tautan ini.</string>
     <string name="about_description">Aplikasi open-source untuk membuat\nsalinan aplikasi Android.</string>
