@@ -105,7 +105,7 @@ Get the latest build from the [Releases page](https://github.com/Nbill27/openclo
 | Older versions | [All releases](https://github.com/Nbill27/openclone/releases) |
 | Build from source | Follow [Build from source](#build-from-source) |
 
-Releases ship `OpenClone-<version>-debug.apk`, a **debug build intended for testing and personal use**, not a Play Store production release. Each release note lists the file size and SHA-256. Binaries are no longer committed to the repository.
+Releases ship `OpenClone-<version>-release.apk`, signed with a stable release key, so a newer version installs over an older one without uninstalling. Each release note lists the file size and SHA-256. Binaries are no longer committed to the repository.
 
 ### Requirements on the phone
 
@@ -228,7 +228,7 @@ cd openclone
 The APK is written to:
 
 ```text
-app/build/outputs/apk/debug/OpenClone-0.4.1-debug.apk
+app/build/outputs/apk/debug/OpenClone-<version>-debug.apk
 ```
 
 On Windows:
@@ -236,6 +236,21 @@ On Windows:
 ```powershell
 gradlew.bat assembleDebug
 ```
+
+To build a signed release APK, create `signing.properties` in the project root — it is git-ignored and read only by `assembleRelease`:
+
+```properties
+storeFile=path/to/release.jks
+storePassword=…
+keyAlias=…
+keyPassword=…
+```
+
+```bash
+./gradlew assembleRelease
+```
+
+Without that file, `assembleRelease` still runs but produces an unsigned APK. CI supplies the same values through the `OPENCLONE_KEYSTORE*` secrets.
 
 If Gradle cannot find the Android SDK, set `ANDROID_HOME` or `ANDROID_SDK_ROOT`, or create a `local.properties` file with your SDK path. Do not commit `local.properties`.
 
@@ -247,7 +262,7 @@ If Gradle cannot find the Android SDK, set `ANDROID_HOME` or `ANDROID_SDK_ROOT`,
 ./gradlew assembleDebug
 ```
 
-GitHub Actions runs unit tests, Android lint, and the debug build on pushes to `main` and on pull requests. Tags matching `v*.*.*` publish a GitHub Release with the generated APK attached.
+GitHub Actions runs unit tests, Android lint, and the build on pushes to `main` and on pull requests. When the `OPENCLONE_KEYSTORE*` secrets are present the build is a signed release; otherwise it falls back to a debug APK. Tags matching `v*.*.*` publish a GitHub Release with the generated APK attached.
 
 ## Project structure
 
