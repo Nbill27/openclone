@@ -3,8 +3,6 @@ package dev.bill.openclone
 import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
@@ -180,11 +178,6 @@ class CloneProgressActivity : AppCompatActivity() {
         val batchLabels = intent.getStringArrayListExtra(EXTRA_BATCH_LABELS)
             ?.takeIf { it.size == batchPackages.size }
             ?: listOfNotNull(singleLabel)
-        val batchNumbers = intent.getIntArrayExtra(EXTRA_BATCH_NUMBERS)
-            ?.takeIf { it.size == batchPackages.size }
-            ?: batchPackages.mapIndexed { i, pkg ->
-                extractCloneNumber(pkg, batchLabels.getOrElse(i) { "" }, fallback = i + 1)
-            }.toIntArray()
 
         if (originalPackage.isNullOrBlank() || batchPackages.isEmpty() || batchLabels.size != batchPackages.size) {
             toast(getString(R.string.error_app_not_found))
@@ -195,32 +188,19 @@ class CloneProgressActivity : AppCompatActivity() {
         isCloning = true
         val originalLabel = intent.getStringExtra(EXTRA_ORIGINAL_LABEL).orEmpty()
         val iconPath = intent.getStringExtra(EXTRA_ICON_PATH)
-        val iconColor = IconColorOption.fromId(intent.getStringExtra(EXTRA_ICON_COLOR))
-        val iconBadge = intent.getBooleanExtra(EXTRA_ICON_BADGE, false)
         val stripAdId = intent.getBooleanExtra(EXTRA_STRIP_AD_ID, false)
         val compatMode = SettingsActivity.isCompatModeEnabled(this)
 
         lifecycleScope.launch {
             val completed = mutableListOf<CloneResult>()
-            var baseBitmap: Bitmap? = null
             try {
-                val (app, rawCustomBytes, loadedBitmap) = withContext(Dispatchers.IO) {
+                val (app, rawCustomBytes) = withContext(Dispatchers.IO) {
                     val installed = AppRepository(this@CloneProgressActivity)
                         .findInstalledApp(originalPackage)
                     val customFile = iconPath?.let { File(it) }?.takeIf { it.exists() }
                     val customBytes = customFile?.let { runCatching { it.readBytes() }.getOrNull() }
-                    val bmp = when {
-                        customFile != null -> decodeSampled(customFile.absolutePath, IconColorizer.EXPORT_ICON_PX)
-                        installed != null -> IconColorizer.loadBaseAppBitmap(
-                            this@CloneProgressActivity,
-                            installed.packageName,
-                            IconColorizer.EXPORT_ICON_PX,
-                        )
-                        else -> null
-                    }
-                    Triple(installed, customBytes, bmp)
+                    installed to customBytes
                 }
-                baseBitmap = loadedBitmap
                 if (app == null) {
                     fail(getString(R.string.error_app_not_found))
                     return@launch
@@ -234,25 +214,14 @@ class CloneProgressActivity : AppCompatActivity() {
                 for (idx in 0 until total) {
                     val targetPkg = batchPackages[idx]
                     val targetLabel = batchLabels[idx]
-                    val cloneNum = batchNumbers[idx]
 
                     try {
-                        val iconBytes = withContext(Dispatchers.Default) {
-                            buildCloneIconBytes(
-                                baseBitmap = baseBitmap,
-                                rawCustomBytes = rawCustomBytes,
-                                iconColor = iconColor,
-                                iconBadge = iconBadge,
-                                cloneNumber = cloneNum,
-                            )
-                        }
-
                         val config = CloneConfig(
                             originalPackage = originalPackage,
                             originalLabel = originalLabel.ifBlank { app.label },
                             newPackage = targetPkg,
                             newLabel = targetLabel,
-                            iconBytes = iconBytes,
+                            iconBytes = rawCustomBytes,
                             stripAdId = stripAdId,
                             compatMode = compatMode,
                         )
@@ -306,51 +275,9 @@ class CloneProgressActivity : AppCompatActivity() {
                 if (isFinishing || isDestroyed) return@launch
                 fail(ApkInstaller.readableError(this@CloneProgressActivity, e))
             } finally {
-                baseBitmap?.recycle()
                 isCloning = false
             }
         }
-    }
-
-    private fun buildCloneIconBytes(
-        baseBitmap: Bitmap?,
-        rawCustomBytes: ByteArray?,
-        iconColor: IconColorOption,
-        iconBadge: Boolean,
-        cloneNumber: Int,
-    ): ByteArray? {
-        val needsStyling = iconColor != IconColorOption.ORIGINAL || iconBadge
-        if (!needsStyling) {
-            return rawCustomBytes
-        }
-        if (baseBitmap == null) {
-            return rawCustomBytes
-        }
-        val styled = IconColorizer.createStyledBitmap(
-            baseBitmap = baseBitmap,
-            option = iconColor,
-            cloneNumber = cloneNumber,
-            showBadge = iconBadge,
-            sizePx = IconColorizer.EXPORT_ICON_PX,
-        )
-        return try {
-            IconColorizer.encodePng(styled)
-        } finally {
-            if (styled !== baseBitmap) styled.recycle()
-        }
-    }
-
-    private fun decodeSampled(path: String, targetPx: Int): Bitmap? {
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeFile(path, bounds)
-        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
-        var sample = 1
-        while (bounds.outWidth / (sample * 2) >= targetPx &&
-            bounds.outHeight / (sample * 2) >= targetPx
-        ) {
-            sample *= 2
-        }
-        return BitmapFactory.decodeFile(path, BitmapFactory.Options().apply { inSampleSize = sample })
     }
 
     private suspend fun onBatchProgress(
@@ -764,10 +691,7 @@ class CloneProgressActivity : AppCompatActivity() {
         const val EXTRA_NEW_LABEL = "new_label"
         const val EXTRA_BATCH_PACKAGES = "batch_packages"
         const val EXTRA_BATCH_LABELS = "batch_labels"
-        const val EXTRA_BATCH_NUMBERS = "batch_numbers"
         const val EXTRA_ICON_PATH = "icon_path"
-        const val EXTRA_ICON_COLOR = "icon_color"
-        const val EXTRA_ICON_BADGE = "icon_badge"
         const val EXTRA_STRIP_AD_ID = "strip_ad_id"
 
         private const val STEP_PREPARE = 0

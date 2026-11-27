@@ -3,12 +3,10 @@ package dev.bill.openclone
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -33,21 +31,17 @@ class CloneConfigActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCloneConfigBinding
 
     private var sourceApp: InstalledApp? = null
-    private var baseAppBitmap: Bitmap? = null
     private var customGalleryBitmap: Bitmap? = null
     private var installedOnDevice: Set<String> = emptySet()
     private var installedPackages: Set<String> = emptySet()
 
     private var cloneCount: Int = 1
-    private var iconColor: IconColorOption = IconColorOption.AUTO
-    private var iconBadge: Boolean = true
     private var iconPath: String? = null
     private var advancedExpanded: Boolean = false
     private var stripAdId: Boolean = false
 
     private var updatingInputs = false
     private val quickCountChips = LinkedHashMap<Int, TextView>()
-    private val colorChips = LinkedHashMap<IconColorOption, TextView>()
 
     private val pickIcon =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -61,18 +55,14 @@ class CloneConfigActivity : AppCompatActivity() {
 
         cloneCount = (savedInstanceState?.getInt(STATE_CLONE_COUNT, 1) ?: 1)
             .coerceIn(1, MAX_BATCH_CLONES)
-        iconColor = IconColorOption.fromId(savedInstanceState?.getString(STATE_ICON_COLOR))
-        iconBadge = savedInstanceState?.getBoolean(STATE_ICON_BADGE, true) ?: true
         iconPath = savedInstanceState?.getString(STATE_ICON_PATH)
         advancedExpanded = savedInstanceState?.getBoolean(STATE_ADVANCED_EXPANDED) ?: false
         stripAdId = savedInstanceState?.getBoolean(STATE_STRIP_AD_ID) ?: false
 
         setupQuickCountChips()
-        setupColorChips()
 
         updatingInputs = true
         binding.countInput.setText(cloneCount.toString())
-        binding.iconBadgeSwitch.isChecked = iconBadge
         binding.stripAdIdSwitch.isChecked = stripAdId
         updatingInputs = false
 
@@ -99,11 +89,6 @@ class CloneConfigActivity : AppCompatActivity() {
 
         binding.clearNameButton.setOnClickListener { binding.nameInput.setText("") }
         binding.resetPackageButton.setOnClickListener { resetPackage() }
-        binding.iconBadgeSwitch.setOnCheckedChangeListener { _, checked ->
-            if (updatingInputs) return@setOnCheckedChangeListener
-            iconBadge = checked
-            refreshIconPreviews()
-        }
         binding.changeIconButton.setOnClickListener { pickIcon.launch(ICON_MIME) }
         binding.advancedHeader.setOnClickListener { setAdvancedExpanded(!advancedExpanded) }
         binding.stripAdIdSwitch.setOnCheckedChangeListener { _, checked -> stripAdId = checked }
@@ -111,8 +96,7 @@ class CloneConfigActivity : AppCompatActivity() {
 
         renderAdvancedState()
         renderQuickCountChipStyles()
-        renderColorChipStyles()
-        iconPath?.let { customGalleryBitmap = decodeSampled(it, IconColorizer.EXPORT_ICON_PX) }
+        iconPath?.let { customGalleryBitmap = decodeSampled(it, ICON_PX) }
 
         loadSource(savedInstanceState == null)
     }
@@ -120,8 +104,6 @@ class CloneConfigActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(STATE_CLONE_COUNT, cloneCount)
-        outState.putString(STATE_ICON_COLOR, iconColor.id)
-        outState.putBoolean(STATE_ICON_BADGE, iconBadge)
         outState.putString(STATE_ICON_PATH, iconPath)
         outState.putBoolean(STATE_ADVANCED_EXPANDED, advancedExpanded)
         outState.putBoolean(STATE_STRIP_AD_ID, stripAdId)
@@ -138,22 +120,7 @@ class CloneConfigActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupColorChips() {
-        binding.colorChipContainer.removeAllViews()
-        colorChips.clear()
-        for (option in IconColorOption.entries) {
-            val chip = createPillChip(getString(option.labelRes), swatchColor = option.swatchColor)
-            chip.setOnClickListener {
-                iconColor = option
-                renderColorChipStyles()
-                refreshIconPreviews()
-            }
-            binding.colorChipContainer.addView(chip)
-            colorChips[option] = chip
-        }
-    }
-
-    private fun createPillChip(label: String, swatchColor: Int? = null): TextView {
+    private fun createPillChip(label: String): TextView {
         val chip = TextView(this)
         chip.setTextAppearance(R.style.Text_OpenClone_Caption)
         chip.text = label
@@ -166,29 +133,12 @@ class CloneConfigActivity : AppCompatActivity() {
             marginEnd = dp(6)
         }
         chip.layoutParams = lp
-        if (swatchColor != null) {
-            val dot = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(swatchColor)
-                setSize(dp(10), dp(10))
-                setStroke(dp(1), 0x44FFFFFF)
-            }
-            dot.setBounds(0, 0, dp(10), dp(10))
-            chip.setCompoundDrawablesRelative(dot, null, null, null)
-            chip.compoundDrawablePadding = dp(6)
-        }
         return chip
     }
 
     private fun renderQuickCountChipStyles() {
         quickCountChips.forEach { (preset, chip) ->
             styleChip(chip, active = preset == cloneCount)
-        }
-    }
-
-    private fun renderColorChipStyles() {
-        colorChips.forEach { (option, chip) ->
-            styleChip(chip, active = option == iconColor)
         }
     }
 
@@ -252,18 +202,8 @@ class CloneConfigActivity : AppCompatActivity() {
                     .list()
                     .map { it.newPackage }
                 val app = repository.findInstalledApp(packageName)
-                val bmp = if (app != null) {
-                    IconColorizer.loadBaseAppBitmap(
-                        this@CloneConfigActivity,
-                        app.packageName,
-                        IconColorizer.EXPORT_ICON_PX,
-                    )
-                } else {
-                    null
-                }
                 LoadedSourceData(
                     app = app,
-                    baseBitmap = bmp,
                     devicePackages = deviceSet,
                     allKnownPackages = deviceSet + historyPackages,
                 )
@@ -275,7 +215,6 @@ class CloneConfigActivity : AppCompatActivity() {
                 return@launch
             }
             sourceApp = app
-            baseAppBitmap = loaded.baseBitmap
             installedOnDevice = loaded.devicePackages
             installedPackages = loaded.allKnownPackages
             renderSource(app)
@@ -355,60 +294,17 @@ class CloneConfigActivity : AppCompatActivity() {
         updatingInputs = false
 
         if (rebuildIcons) {
-            refreshIconPreviews(specs)
+            refreshIconPreview()
         }
     }
 
-    private fun refreshIconPreviews(precomputedSpecs: List<BatchCloneSpec>? = null) {
+    private fun refreshIconPreview() {
         val app = sourceApp ?: return
-        val specs = precomputedSpecs ?: currentBatchSpecs()
-        if (specs.isEmpty()) return
-
-        val sourceBmp = customGalleryBitmap ?: baseAppBitmap
-        binding.iconPreviewContainer.removeAllViews()
-
-        val previewLimit = 6
-        val visibleSpecs = specs.take(previewLimit)
-        val previewPx = dp(52).coerceAtLeast(64)
-
-        for ((idx, spec) in visibleSpecs.withIndex()) {
-            val iv = ImageView(this).apply {
-                layoutParams = LinearLayout.LayoutParams(dp(52), dp(52)).apply {
-                    if (idx > 0) marginStart = dp(8)
-                }
-                setBackgroundResource(R.drawable.bg_icon_squircle)
-                val pad = dp(7)
-                setPadding(pad, pad, pad, pad)
-                scaleType = ImageView.ScaleType.FIT_CENTER
-                contentDescription = spec.newLabel
-            }
-            if (sourceBmp != null) {
-                val styled = IconColorizer.createStyledBitmap(
-                    baseBitmap = sourceBmp,
-                    option = iconColor,
-                    cloneNumber = spec.cloneNumber,
-                    showBadge = iconBadge,
-                    sizePx = previewPx,
-                )
-                iv.setImageBitmap(styled)
-            } else {
-                iv.setImageDrawable(AppIcons.load(this, app.packageName, dp(48)))
-            }
-            binding.iconPreviewContainer.addView(iv)
-        }
-
-        if (specs.size > previewLimit) {
-            val moreBadge = TextView(this).apply {
-                setTextAppearance(R.style.Text_OpenClone_Caption)
-                text = getString(R.string.batch_more_icons, specs.size - previewLimit)
-                gravity = Gravity.CENTER
-                setBackgroundResource(R.drawable.bg_icon_squircle)
-                setTextColor(ContextCompat.getColor(this@CloneConfigActivity, R.color.accent_white))
-                layoutParams = LinearLayout.LayoutParams(dp(52), dp(52)).apply {
-                    marginStart = dp(8)
-                }
-            }
-            binding.iconPreviewContainer.addView(moreBadge)
+        val custom = customGalleryBitmap
+        if (custom != null) {
+            binding.iconPreview.setImageBitmap(custom)
+        } else {
+            binding.iconPreview.setImageDrawable(AppIcons.load(this, app.packageName, dp(48)))
         }
     }
 
@@ -457,13 +353,7 @@ class CloneConfigActivity : AppCompatActivity() {
                     CloneProgressActivity.EXTRA_BATCH_LABELS,
                     ArrayList(specs.map { it.newLabel }),
                 )
-                .putExtra(
-                    CloneProgressActivity.EXTRA_BATCH_NUMBERS,
-                    specs.map { it.cloneNumber }.toIntArray(),
-                )
                 .putExtra(CloneProgressActivity.EXTRA_ICON_PATH, iconPath)
-                .putExtra(CloneProgressActivity.EXTRA_ICON_COLOR, iconColor.id)
-                .putExtra(CloneProgressActivity.EXTRA_ICON_BADGE, iconBadge)
                 .putExtra(CloneProgressActivity.EXTRA_STRIP_AD_ID, stripAdId),
         )
     }
@@ -506,12 +396,12 @@ class CloneConfigActivity : AppCompatActivity() {
                     val savedPath = File(cacheDir, "picked_icon_${System.currentTimeMillis()}.img")
                         .apply { writeBytes(bytes) }
                         .absolutePath
-                    savedPath to decodeSampled(savedPath, IconColorizer.EXPORT_ICON_PX)
+                    savedPath to decodeSampled(savedPath, ICON_PX)
                 }
                 if (isFinishing || isDestroyed) return@launch
                 replaceIconFile(path)
                 customGalleryBitmap = decoded
-                refreshIconPreviews()
+                refreshIconPreview()
             } catch (e: Exception) {
                 toast(getString(R.string.error_icon_read, e.message ?: e.javaClass.simpleName))
             }
@@ -552,7 +442,6 @@ class CloneConfigActivity : AppCompatActivity() {
 
     private data class LoadedSourceData(
         val app: InstalledApp?,
-        val baseBitmap: Bitmap?,
         val devicePackages: Set<String>,
         val allKnownPackages: Set<String>,
     )
@@ -563,11 +452,12 @@ class CloneConfigActivity : AppCompatActivity() {
         private val QUICK_COUNTS = listOf(1, 2, 3, 5, 10)
 
         private const val STATE_CLONE_COUNT = "state_clone_count"
-        private const val STATE_ICON_COLOR = "state_icon_color"
-        private const val STATE_ICON_BADGE = "state_icon_badge"
         private const val STATE_ICON_PATH = "state_icon_path"
         private const val STATE_ADVANCED_EXPANDED = "state_advanced_expanded"
         private const val STATE_STRIP_AD_ID = "state_strip_ad_id"
         private const val ICON_MIME = "image/*"
+
+        /** Target size for decoding a gallery image used as the clone icon. */
+        private const val ICON_PX = 192
     }
 }
