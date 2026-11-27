@@ -155,7 +155,6 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/installed_apps_count"
                 tools:text="Aplikasi Terpasang (124)" />
 
             <ImageView
