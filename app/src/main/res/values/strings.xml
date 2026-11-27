@@ -67,11 +67,13 @@
     <string name="error_package_invalid">Package name tidak valid.</string>
     <string name="error_package_same">Package clone harus beda dari aslinya.</string>
     <string name="error_package_installed">Package ini sudah terpasang, ganti suffix-nya.</string>
+    <string name="error_package_in_history">Package ini sudah dipakai clone lain di riwayat. Ganti suffix-nya atau hapus riwayat lamanya.</string>
     <string name="icon_original_hint">Ikon asli aplikasi tetap dipakai.</string>
     <string name="error_icon_read">Gagal membaca gambar: %1$s</string>
     <string name="error_icon_empty">Gagal membaca gambar: file kosong.</string>
     <string name="error_app_not_found">Aplikasi tidak ditemukan.</string>
     <string name="error_clone_file_missing">File clone tidak ditemukan, buat ulang dulu.</string>
+    <string name="error_dex_patch_incomplete">Clone dibatalkan: %1$d referensi di DEX tidak bisa ditulis ulang dengan aman, jadi hasilnya berpotensi tidak konsisten. Nonaktifkan Mode kompatibilitas di Pengaturan lalu coba lagi.</string>
 
     <!-- Proses Cloning -->
     <string name="title_clone_progress">Proses Cloning</string>

@@ -314,7 +314,7 @@ class CloneConfigActivity : AppCompatActivity() {
                 suggestClonePackage(app.packageName, installedPackages)
             },
             count = cloneCount,
-            existingPackages = if (cloneCount == 1) installedPackages else installedPackages,
+            existingPackages = installedPackages,
         )
     }
 
@@ -481,6 +481,9 @@ class CloneConfigActivity : AppCompatActivity() {
             if (!isValidPackageName(pkg)) return getString(R.string.error_package_invalid)
             if (pkg == app.packageName) return getString(R.string.error_package_same)
             if (pkg in installedOnDevice) return getString(R.string.error_package_installed)
+            // A package that only exists in the clone history would silently
+            // overwrite the old APK and duplicate its history row.
+            if (pkg in installedPackages) return getString(R.string.error_package_in_history)
         }
         return null
     }

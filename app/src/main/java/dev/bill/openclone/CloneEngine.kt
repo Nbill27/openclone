@@ -124,9 +124,19 @@ class CloneEngine(private val context: Context) {
                     renamedAccountTypes = summary.renamedAccountTypes,
                 )
                 if (!rules.isEmpty) {
-                    DexPatcher.patchModule(loaded, rules) { current, total ->
+                    val report = DexPatcher.patchModule(loaded, rules) { current, total ->
                         ensureActive()
                         onProgress("Menyesuaikan referensi DEX ($current/$total)...")
+                    }
+                    // A rejected literal means the manifest now points at a renamed
+                    // identifier while the DEX still carries the original one. The
+                    // clone would install fine and then misbehave at runtime, so it
+                    // must not be reported as a success.
+                    check(report.rejected == 0) {
+                        context.getString(
+                            R.string.error_dex_patch_incomplete,
+                            report.rejected,
+                        )
                     }
                 }
             }

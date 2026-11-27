@@ -84,16 +84,34 @@ internal object DexPatcher {
         return Rules(exactMap.values.toList(), prefixList)
     }
 
+    /**
+     * Outcome of patching one APK.
+     *
+     * [rejected] counts literals that *were* found in a `string_ids` table but
+     * could not be rewritten safely (the new value would break the UTF-16 sort
+     * order, or the payload length did not match). A rejected literal means the
+     * manifest now points at a renamed identifier while the DEX still holds the
+     * original one, so callers must treat a non-zero [rejected] as a failure
+     * instead of reporting success.
+     */
+    data class PatchReport(
+        val patched: Int = 0,
+        val rejected: Int = 0,
+    )
+
+    private enum class PatchOutcome { PATCHED, SKIPPED, REJECTED }
+
     suspend fun patchModule(
         module: ApkModule,
         rules: Rules,
         onDexProgress: suspend (Int, Int) -> Unit,
-    ): Int {
-        if (rules.isEmpty) return 0
-        val dexSources = runCatching { module.listDexFiles() }.getOrNull() ?: return 0
-        if (dexSources.isEmpty()) return 0
+    ): PatchReport {
+        if (rules.isEmpty) return PatchReport()
+        val dexSources = runCatching { module.listDexFiles() }.getOrNull() ?: return PatchReport()
+        if (dexSources.isEmpty()) return PatchReport()
 
         var totalPatched = 0
+        var totalRejected = 0
         val totalDex = dexSources.size
         dexSources.forEachIndexed { index, dexSource ->
             onDexProgress(index + 1, totalDex)
@@ -106,12 +124,11 @@ internal object DexPatcher {
                 null
             } ?: return@forEachIndexed
 
-            val patchedCount = try {
-                patchDexInPlace(rawBytes, rules)
-            } catch (_: Throwable) {
-                0
-            }
-            if (patchedCount <= 0) return@forEachIndexed
+            // Errors inside the patcher must surface: silently treating them as
+            // "nothing to patch" is what produced false-success clones before.
+            val report = patchDexInPlace(rawBytes, rules)
+            totalRejected += report.rejected
+            if (report.patched <= 0) return@forEachIndexed
 
             val replacement = ByteInputSource(rawBytes, entryPath)
             replacement.copyAttributes(originalSource)
@@ -122,19 +139,20 @@ internal object DexPatcher {
             }
             module.zipEntryMap.remove(entryPath)
             module.add(replacement)
-            totalPatched += patchedCount
+            totalPatched += report.patched
         }
-        return totalPatched
+        return PatchReport(patched = totalPatched, rejected = totalRejected)
     }
 
     /**
      * Patches matching strings directly inside [dex] in-place and updates the
      * DEX SHA-1 signature and Adler32 checksum when at least one string changed.
      *
-     * @return number of `string_ids` entries modified in [dex].
+     * @return how many `string_ids` entries were rewritten and how many matches
+     * had to be rejected because rewriting them would corrupt the sorted table.
      */
-    internal fun patchDexInPlace(dex: ByteArray, rules: Rules): Int {
-        if (rules.isEmpty || dex.size < HEADER_SIZE) return 0
+    internal fun patchDexInPlace(dex: ByteArray, rules: Rules): PatchReport {
+        if (rules.isEmpty || dex.size < HEADER_SIZE) return PatchReport()
         // Verify "dex\n03x\0" magic and standard 0x70 single-container header.
         if (dex[0] != 0x64.toByte() ||
             dex[1] != 0x65.toByte() ||
@@ -142,13 +160,13 @@ internal object DexPatcher {
             dex[3] != 0x0A.toByte() ||
             dex[7] != 0x00.toByte()
         ) {
-            return 0
+            return PatchReport()
         }
         val fileSize = readIntLE(dex, 32)
         val headerSize = readIntLE(dex, 36)
         val endianTag = readIntLE(dex, 40)
         if (endianTag != ENDIAN_CONSTANT || headerSize != HEADER_SIZE || fileSize != dex.size) {
-            return 0
+            return PatchReport()
         }
 
         val stringIdsSize = readIntLE(dex, 56)
@@ -157,17 +175,20 @@ internal object DexPatcher {
             stringIdsOff < HEADER_SIZE ||
             stringIdsOff.toLong() + stringIdsSize.toLong() * 4L > dex.size.toLong()
         ) {
-            return 0
+            return PatchReport()
         }
 
-        var modified = 0
+        var patched = 0
+        var rejected = 0
 
         // 1. O(log N) binary search for every exact-match rule.
         for (rule in rules.exactRules) {
             val idx = binarySearchAscii(dex, stringIdsOff, stringIdsSize, rule.oldBytes)
             if (idx < 0) continue
-            if (overwriteIfSortPreserved(dex, stringIdsOff, stringIdsSize, idx, rule.newAscii, rule.newBytes)) {
-                modified++
+            when (overwriteIfSortPreserved(dex, stringIdsOff, stringIdsSize, idx, rule.newAscii, rule.newBytes)) {
+                PatchOutcome.PATCHED -> patched++
+                PatchOutcome.REJECTED -> rejected++
+                PatchOutcome.SKIPPED -> Unit
             }
         }
 
@@ -185,19 +206,30 @@ internal object DexPatcher {
                 val candidateBytes = dex.copyOfRange(payloadOff, payloadOff + payloadLen)
                 System.arraycopy(prefixRule.newBytes, 0, candidateBytes, 0, prefixRule.newBytes.size)
                 val candidateStr = decodeMutf8(candidateBytes, 0, candidateBytes.size)
-                if (candidateStr != null &&
-                    overwriteIfSortPreserved(dex, stringIdsOff, stringIdsSize, idx, candidateStr, candidateBytes)
-                ) {
-                    modified++
+                if (candidateStr != null) {
+                    when (
+                        overwriteIfSortPreserved(
+                            dex,
+                            stringIdsOff,
+                            stringIdsSize,
+                            idx,
+                            candidateStr,
+                            candidateBytes,
+                        )
+                    ) {
+                        PatchOutcome.PATCHED -> patched++
+                        PatchOutcome.REJECTED -> rejected++
+                        PatchOutcome.SKIPPED -> Unit
+                    }
                 }
                 idx++
             }
         }
 
-        if (modified > 0) {
+        if (patched > 0) {
             updateHashes(dex)
         }
-        return modified
+        return PatchReport(patched = patched, rejected = rejected)
     }
 
     private fun overwriteIfSortPreserved(
@@ -207,26 +239,26 @@ internal object DexPatcher {
         idx: Int,
         newStr: String,
         newBytes: ByteArray,
-    ): Boolean {
-        val loc = locateStringBytes(dex, stringIdsOff, idx) ?: return false
+    ): PatchOutcome {
+        val loc = locateStringBytes(dex, stringIdsOff, idx) ?: return PatchOutcome.SKIPPED
         val (payloadOff, payloadLen) = loc
-        if (payloadLen != newBytes.size) return false
+        if (payloadLen != newBytes.size) return PatchOutcome.SKIPPED
         // Never touch Dalvik type descriptors (`Lcom/foo/Bar;`).
         if (payloadLen >= 2 && dex[payloadOff] == 'L'.code.toByte() &&
             dex[payloadOff + payloadLen - 1] == ';'.code.toByte()
         ) {
-            return false
+            return PatchOutcome.SKIPPED
         }
         if (idx > 0) {
-            val prev = readStringAt(dex, stringIdsOff, idx - 1) ?: return false
-            if (compareUtf16CodeUnits(prev, newStr) >= 0) return false
+            val prev = readStringAt(dex, stringIdsOff, idx - 1) ?: return PatchOutcome.SKIPPED
+            if (compareUtf16CodeUnits(prev, newStr) >= 0) return PatchOutcome.REJECTED
         }
         if (idx + 1 < stringIdsSize) {
-            val next = readStringAt(dex, stringIdsOff, idx + 1) ?: return false
-            if (compareUtf16CodeUnits(newStr, next) >= 0) return false
+            val next = readStringAt(dex, stringIdsOff, idx + 1) ?: return PatchOutcome.SKIPPED
+            if (compareUtf16CodeUnits(newStr, next) >= 0) return PatchOutcome.REJECTED
         }
         System.arraycopy(newBytes, 0, dex, payloadOff, newBytes.size)
-        return true
+        return PatchOutcome.PATCHED
     }
 
     private fun binarySearchAscii(
