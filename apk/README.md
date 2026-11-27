@@ -1,25 +1,24 @@
 # APK folder
 
-This folder holds ready-to-install OpenClone APKs, so release files do not get
-mixed up with source code.
+APK binaries are **not** stored in this repository. Every build is published as a
+GitHub Release, which keeps the Git history small and makes each download
+traceable to a version and a commit.
 
-## Contents
+## Download
 
-| File | Description |
+| What | Where |
 | --- | --- |
-| `OpenClone-0.4.1-debug.apk` | OpenClone 0.4.1 (debug), ready to install on a phone. |
+| Latest version | [Releases — latest](https://github.com/Nbill27/openclone/releases/latest) |
+| Older versions | [All releases](https://github.com/Nbill27/openclone/releases) |
+| Just built one yourself | The `OpenClone-debug-apk` artifact of the latest [Actions run](https://github.com/Nbill27/openclone/actions) |
 
-File details:
-
-- Size: 13,465,289 bytes
-- Built: November 26, 2026
-- SHA-256: `7C55C5FEB0DE4E99AB6962C209195E6E9353056055FAAAAC04FC047621FE8D95`
+Each release attaches `OpenClone-<version>-debug.apk` and records its size and
+SHA-256 in the release notes.
 
 ## How to install
 
-1. Transfer `OpenClone-0.4.1-debug.apk` to your phone (USB cable, Google Drive,
-   Telegram, anything works).
-2. Open the APK file from a file manager on the phone.
+1. Download the APK from the Releases page onto your phone.
+2. Open the file from a file manager.
 3. When Android asks, allow **Install unknown apps** for the file manager or
    browser you are using.
 4. Tap **Install**, then **Open**.
@@ -27,31 +26,28 @@ File details:
 Or through ADB, if the phone is connected and USB debugging is enabled:
 
 ```bash
-adb install -r OpenClone-0.4.1-debug.apk
+adb install -r OpenClone-<version>-debug.apk
 ```
 
 ## Notes
 
-- This is a **debug** build, signed with a debug key. It is fine for personal
-  use; do not upload it to the Play Store.
+- These are **debug** builds, signed with a debug key. They are fine for personal
+  use; do not upload them to the Play Store.
+- Because each CI build uses a fresh debug key, a newer release cannot be
+  installed over an older one. Uninstall the old app first.
 - After installing, OpenClone itself needs the **Install unknown apps**
   permission, because the clones it produces are also installed as APKs.
-- This APK contains no ads, no tracking, and no network access.
-- The APK in this folder is committed to Git for convenience, which is not ideal
-  practice. When you build a new one, do not pile APKs up here: upload it to the
-  [Releases](https://github.com/Nbill27/openclone/releases) page or use the
-  GitHub Actions artifact, then update just this one file.
+- These builds contain no ads, no tracking, and no network access.
 
-## Building a new APK
+## Publishing a new version
 
-From the `openclone` folder:
+1. Bump `appVersionCode` and `appVersionName` in `app/build.gradle.kts`.
+2. Push to `main` and let CI pass.
+3. Tag and push:
 
 ```bash
-./gradlew assembleDebug
+git tag v0.4.2
+git push origin v0.4.2
 ```
 
-Then copy the result here:
-
-```powershell
-Copy-Item app\build\outputs\apk\debug\OpenClone-0.4.1-debug.apk apk\OpenClone-0.4.1-debug.apk -Force
-```
+The `build.yml` workflow builds the APK and attaches it to the release.

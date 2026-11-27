@@ -322,48 +322,46 @@ class CloneEngineIntegrationTest {
     }
 
     @Test
-    fun `clones real 5-DEX 20MB APK end-to-end quickly and passes ApkVerifier`() = runBlocking {
-        val candidateApk = sequenceOf(File("../apk"), File("apk"))
-            .filter { it.isDirectory }
-            .flatMap { it.listFiles()?.asSequence().orEmpty() }
-            .firstOrNull { it.isFile && it.extension.equals("apk", ignoreCase = true) }
-            ?: error("Tidak ada APK di folder apk/ untuk diuji end-to-end.")
+    fun `clones a five-DEX APK end-to-end, patches every shard, and passes ApkVerifier`() = runBlocking {
+        val oldPkg = "dev.openclone.fixture"
+        val newPkg = "$oldPkg.clone1"
+        val dexCount = 5
+        // Vendor authority: does not start with the package, so it is the case
+        // DexPatcher can rewrite in place (identical byte length).
+        val vendorAuthority = "com.vendor.sync.provider"
 
         val startMs = System.currentTimeMillis()
-        val tempDir = java.nio.file.Files.createTempDirectory("openclone-real-apk").toFile()
+        val tempDir = java.nio.file.Files.createTempDirectory("openclone-multidex").toFile()
         try {
-            val loaded = ApkModule.loadApkFile(candidateApk)
-            loaded.setLoadDefaultFramework(false)
+            val loaded = buildMultiDexModule(oldPkg, vendorAuthority, dexCount)
             try {
-                val oldPkg = loaded.packageName
-                val newPkg = "$oldPkg.clone1"
                 val summary = CloneEngine.rewritePackageAndManifest(
                     module = loaded,
                     oldPackage = oldPkg,
                     newPackage = newPkg,
                     compatMode = true,
                 )
-                CloneEngine.applyCloneLabel(loaded, "OpenClone (Clone 1)")
-                val onePxPng = byteArrayOf(
-                    0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
-                    0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
-                    0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-                    0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4.toByte(),
-                    0x89.toByte(), 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41,
-                    0x54, 0x78, 0x9C.toByte(), 0x63, 0x00, 0x01, 0x00, 0x00,
-                    0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4.toByte(), 0x00,
-                    0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE.toByte(),
-                    0x42, 0x60, 0x82.toByte(),
+                CloneEngine.applyCloneLabel(loaded, "Fixture (Clone 1)")
+
+                val rewrittenVendor = summary.renamedAuthorities[vendorAuthority]
+                    ?: error("Authority vendor tidak ikut di-rename di manifest")
+                assertEquals(
+                    "Rename vendor harus sama panjang supaya bisa ditulis ke DEX",
+                    vendorAuthority.length,
+                    rewrittenVendor.length,
                 )
-                CloneEngine.replaceIcon(loaded, onePxPng)
 
                 val rules = DexPatcher.buildRules(
-                    renamedAuthorities = summary.renamedAuthorities +
-                        mapOf("org.bouncycastle.provider" to "org.bouncycastle.providec1"),
+                    renamedAuthorities = summary.renamedAuthorities,
                     renamedPermissions = summary.renamedPermissions,
                     renamedAccountTypes = summary.renamedAccountTypes,
                 )
-                DexPatcher.patchModule(loaded, rules) { _, _ -> }
+                val report = DexPatcher.patchModule(loaded, rules) { _, _ -> }
+                assertEquals("Tidak ada literal yang ditolak", 0, report.rejected)
+                assertTrue(
+                    "Setiap shard DEX harus ikut dipatch (patched=${report.patched})",
+                    report.patched >= dexCount,
+                )
 
                 val unsigned = File(tempDir, "unsigned.apk")
                 val signed = File(tempDir, "signed.apk")
@@ -371,16 +369,87 @@ class CloneEngineIntegrationTest {
                 signForTest(unsigned, signed)
 
                 val elapsedMs = System.currentTimeMillis() - startMs
-                println("Full 5-DEX APK clone + RSA keygen + sign elapsed: ${elapsedMs}ms")
+                println("Five-DEX clone + RSA keygen + sign elapsed: ${elapsedMs}ms")
 
                 val verified = ApkVerifier.Builder(signed).build().verify()
-                assertTrue("Cloned real APK failed verification: ${verified.errors}", verified.isVerified)
+                assertTrue("Cloned APK failed verification: ${verified.errors}", verified.isVerified)
+
+                // Every shard must now carry the rewritten authority and no trace
+                // of the original literal, including the content:// prefix form.
+                ApkModule.loadApkFile(signed).use { out ->
+                    val dexNames = out.listDexFiles().map { it.alias }
+                    assertEquals(dexCount, dexNames.size)
+                    for (name in dexNames) {
+                        val strings = dexStrings(out.getInputSource(name).openStream().readBytes())
+                        assertFalse(
+                            "$name masih memuat authority lama",
+                            strings.any { it.contains(vendorAuthority) },
+                        )
+                        assertTrue(
+                            "$name tidak memuat authority baru",
+                            strings.contains(rewrittenVendor),
+                        )
+                    }
+                }
             } finally {
                 loaded.destroy()
             }
         } finally {
             tempDir.deleteRecursively()
         }
+    }
+
+    /** Five-DEX APK with a launcher activity and a provider authority. */
+    private fun buildMultiDexModule(pkg: String, authority: String, dexCount: Int): ApkModule {
+        val module = ApkModule()
+        module.setLoadDefaultFramework(false)
+        module.tableBlock = TableBlock.createEmpty().apply { getOrCreatePackage(0x7f, pkg) }
+
+        val manifest = AndroidManifestBlock()
+        manifest.packageName = pkg
+        val appEl = manifest.orCreateApplicationElement
+
+        val activity = appEl.newElement("activity")
+        activity.getOrCreateAndroidAttribute("name", CloneEngine.ID_NAME)
+            .setValueAsString(".MainActivity")
+        val filter = activity.newElement("intent-filter")
+        filter.newElement("action")
+            .getOrCreateAndroidAttribute("name", CloneEngine.ID_NAME)
+            .setValueAsString("android.intent.action.MAIN")
+        filter.newElement("category")
+            .getOrCreateAndroidAttribute("name", CloneEngine.ID_NAME)
+            .setValueAsString("android.intent.category.LAUNCHER")
+
+        val provider = appEl.newElement("provider")
+        provider.getOrCreateAndroidAttribute("name", CloneEngine.ID_NAME)
+            .setValueAsString("$pkg.FileProvider")
+        provider.getOrCreateAndroidAttribute("authorities", CloneEngine.ID_AUTHORITIES)
+            .setValueAsString("$pkg.fileprovider;$authority")
+        module.setManifest(manifest)
+
+        for (i in 0 until dexCount) {
+            val entry = if (i == 0) "classes.dex" else "classes${i + 1}.dex"
+            val dex = buildTinyDex(
+                "L$pkg/Shard${i}Activity;",
+                authority,
+                "content://$authority/shard$i",
+            )
+            module.add(ByteInputSource(dex, entry))
+        }
+        return module
+    }
+
+    private fun dexStrings(dex: ByteArray): Set<String> {
+        val out = HashSet<String>()
+        DexFile.read(dex).use { file ->
+            for (layout in file) {
+                val section = layout.getSection(SectionType.STRING_ID) ?: continue
+                for (item in section) {
+                    item.string?.let(out::add)
+                }
+            }
+        }
+        return out
     }
 
     @Test
@@ -714,14 +783,18 @@ class CloneEngineIntegrationTest {
         }
     }
 
-    private fun buildTinyDex(classDescriptor: String): ByteArray {
+    private fun buildTinyDex(classDescriptor: String, vararg strings: String): ByteArray {
         val dex = DexFile.createDefault()
         val c = dex.orCreateFirst.getOrCreateClass(TypeKey(classDescriptor))
         c.setSuperClass(TypeKey("Ljava/lang/Object;"))
         val m = c.getOrCreateDirectMethod(MethodKey.parse("$classDescriptor->ping()V"))
         m.addAccessFlag(com.reandroid.dex.common.AccessFlag.STATIC)
-        m.localRegistersCount = 0
-        m.definition.orCreateInstructionList.createNext(Opcode.RETURN_VOID)
+        m.localRegistersCount = if (strings.isEmpty()) 0 else 1
+        val insns = m.definition.orCreateInstructionList
+        for (value in strings) {
+            insns.createStringAt(insns.count, 0, value)
+        }
+        insns.createNext(Opcode.RETURN_VOID)
         dex.refreshFull()
         val bytes = dex.bytes
         dex.close()

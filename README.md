@@ -101,11 +101,11 @@ Get the latest build from the [Releases page](https://github.com/Nbill27/openclo
 
 | Option | Details |
 |---|---|
-| Latest release | [Download OpenClone-0.4.1-debug.apk](https://github.com/Nbill27/openclone/releases/latest) |
-| APK included in the repository | [`apk/OpenClone-0.4.1-debug.apk`](apk/OpenClone-0.4.1-debug.apk) |
+| Latest release | [Download the latest APK](https://github.com/Nbill27/openclone/releases/latest) |
+| Older versions | [All releases](https://github.com/Nbill27/openclone/releases) |
 | Build from source | Follow [Build from source](#build-from-source) |
 
-The current `v0.4.1` release ships `OpenClone-0.4.1-debug.apk`, a **debug build intended for testing and personal use**, not a Play Store production release. Sizes and checksums are recorded in [`apk/README.md`](apk/README.md).
+Releases ship `OpenClone-<version>-debug.apk`, a **debug build intended for testing and personal use**, not a Play Store production release. Each release note lists the file size and SHA-256. Binaries are no longer committed to the repository.
 
 ### Requirements on the phone
 
@@ -255,8 +255,7 @@ GitHub Actions runs unit tests, Android lint, and the debug build on pushes to `
 openclone/
 ├── .github/workflows/build.yml
 ├── apk/
-│   ├── OpenClone-0.4.1-debug.apk
-│   └── README.md
+│   └── README.md                    # Points at the Releases page; no binaries in git
 ├── app/src/main/
 │   ├── AndroidManifest.xml
 │   ├── java/dev/bill/openclone/
