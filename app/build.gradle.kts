@@ -45,6 +45,17 @@ android {
         viewBinding = true
     }
 
+    // Print full assertion messages in CI logs; the default only shows the
+    // exception type and file:line, which hides which command or input failed.
+    testOptions {
+        unitTests.all { test ->
+            test.testLogging {
+                exceptionFormat =
+                    org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            }
+        }
+    }
+
     // ARSCLib / apksig pull in large Java libraries. Keep the packaging simple.
     packaging {
         resources {

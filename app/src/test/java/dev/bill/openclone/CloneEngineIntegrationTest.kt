@@ -490,8 +490,10 @@ class CloneEngineIntegrationTest {
                 aapt2, "link",
                 "-I", androidJar.absolutePath,
                 "--manifest", baseManifestXml.absolutePath,
-                "--split", "${splitXxhdpiApk.absolutePath};xxhdpi",
-                "--split", "${splitHdpiUninstalledApk.absolutePath};hdpi",
+                // aapt2 splits the argument with the platform path separator,
+                // so this is ';' on Windows and ':' on Linux/macOS.
+                "--split", "${splitXxhdpiApk.absolutePath}${File.pathSeparator}xxhdpi",
+                "--split", "${splitHdpiUninstalledApk.absolutePath}${File.pathSeparator}hdpi",
                 "-o", baseApk.absolutePath,
                 baseResZip.absolutePath,
             )
