@@ -91,5 +91,5 @@ jobs:
       - name: Create release and attach APK
         uses: softprops/action-gh-release@v3
         with:
-          files: dist/*.apk
+          files: dist/**/*.apk
           generate_release_notes: true
