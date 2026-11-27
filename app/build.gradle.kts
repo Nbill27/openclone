@@ -5,8 +5,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-val appVersionCode = 8
-val appVersionName = "0.4.4"
+val appVersionCode = 9
+val appVersionName = "0.4.5"
 
 base {
     archivesName.set("OpenClone-$appVersionName")

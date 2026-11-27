@@ -1496,6 +1496,10 @@ class CloneEngine(private val context: Context) {
                     val original = module.getInputSource(path) ?: continue
                     val replacement = ByteInputSource(iconBytes, path)
                     replacement.copyAttributes(original)
+                    // copyAttributes also copies the alias, which is the zip entry
+                    // name actually written. Without resetting it the bytes land on
+                    // whatever path the source entry carried.
+                    replacement.setAlias(path)
                     replacement.method = original.method
                     replacement.isUncompressed = original.isUncompressed
                     module.removeInputSource(path)
@@ -1518,6 +1522,7 @@ class CloneEngine(private val context: Context) {
                             module.removeInputSource(oldPath)
                             val replacement = ByteInputSource(iconBytes, newPath)
                             replacement.copyAttributes(original)
+                            replacement.setAlias(newPath)
                             module.add(replacement)
                             modifiedTable = true
                         }
