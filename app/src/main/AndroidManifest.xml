@@ -19,6 +19,7 @@
 
     <application
         android:allowBackup="false"
+        android:largeHeap="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
@@ -65,6 +66,10 @@
             android:name=".AboutActivity"
             android:exported="false"
             android:parentActivityName=".SettingsActivity" />
+
+        <receiver
+            android:name=".InstallStatusReceiver"
+            android:exported="false" />
 
         <!-- Hand the rewritten APK to the package installer on API 24+. -->
         <provider

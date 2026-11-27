@@ -20,15 +20,12 @@ import java.io.File
 /**
  * Layar 5 "Riwayat Clone" (DESAIN.md section 4): every finished clone, with
  * search, Semua/Berhasil/Gagal filters and the shared bottom navigation.
- *
- * A clone is "Berhasil" while its APK still exists and "Gagal" once the file
- * is gone, which is the only failure state the history can observe without
- * re-running the engine.
  */
 class HistoryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHistoryBinding
     private lateinit var adapter: HistoryAdapter
+    private lateinit var apkInstaller: ApkInstaller
 
     private var allEntries: List<HistoryEntry> = emptyList()
     private var query: String = ""
@@ -39,8 +36,15 @@ class HistoryActivity : AppCompatActivity() {
         binding = ActivityHistoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        apkInstaller = ApkInstaller(this) { _, status ->
+            if (status == android.content.pm.PackageInstaller.STATUS_SUCCESS) {
+                loadHistory()
+            }
+        }
+
         adapter = HistoryAdapter(
             entries = emptyList(),
+            onInstall = ::install,
             onShare = ::share,
             onDelete = ::delete,
         )
@@ -59,14 +63,17 @@ class HistoryActivity : AppCompatActivity() {
 
         binding.bottomNav.select(BottomNavView.Tab.HISTORY)
         renderChips()
-
-        // onResume owns the load: it runs right after onCreate, and it also
-        // picks up a clone that finished while this tab was in the background.
     }
 
     override fun onResume() {
         super.onResume()
+        apkInstaller.onResume()
         loadHistory()
+    }
+
+    override fun onPause() {
+        apkInstaller.onPause()
+        super.onPause()
     }
 
     private fun loadHistory() {
@@ -129,6 +136,15 @@ class HistoryActivity : AppCompatActivity() {
         chip.isSelected = active
     }
 
+    private fun install(entry: HistoryEntry) {
+        val file = File(File(filesDir, "clones"), entry.record.fileName)
+        if (!file.exists()) {
+            toast(getString(R.string.history_missing_file))
+            return
+        }
+        apkInstaller.install(entry.record.newPackage, file, entry.record.newLabel)
+    }
+
     private fun share(entry: HistoryEntry) {
         val file = File(File(filesDir, "clones"), entry.record.fileName)
         if (!file.exists()) {
@@ -137,7 +153,7 @@ class HistoryActivity : AppCompatActivity() {
         }
         val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
         val intent = Intent(Intent.ACTION_SEND).apply {
-            type = APK_MIME_TYPE
+            type = ApkInstaller.APK_MIME_TYPE
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
@@ -148,16 +164,16 @@ class HistoryActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Removes the record and its APK. [CloneStore.remove] only rewrites the
-     * JSON, so the file cleanup has to happen here.
-     */
     private fun delete(entry: HistoryEntry) {
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 CloneStore(this@HistoryActivity).remove(entry.record.newPackage)
-                val file = File(File(filesDir, "clones"), entry.record.fileName)
+                val clonesDir = File(filesDir, "clones")
+                val file = File(clonesDir, entry.record.fileName)
                 if (file.exists()) file.delete()
+                val iconFile = AppIcons.clonePreviewFile(this@HistoryActivity, entry.record.newPackage)
+                if (iconFile.exists()) iconFile.delete()
+                AppIcons.evict(entry.record.newPackage)
             }
             if (isFinishing || isDestroyed) return@launch
             toast(getString(R.string.history_deleted))
@@ -173,7 +189,6 @@ class HistoryActivity : AppCompatActivity() {
     private val HistoryEntry.searchKey: String
         get() = "${record.newLabel} ${record.originalPackage} ${record.newPackage}".lowercase()
 
-    /** Semua / Berhasil / Gagal, applied on top of the text query. */
     private enum class HistoryFilter(val success: Boolean?) {
         ALL(null),
         SUCCESS(true),
@@ -181,9 +196,5 @@ class HistoryActivity : AppCompatActivity() {
 
         fun matches(entry: HistoryEntry): Boolean =
             success == null || entry.fileExists == success
-    }
-
-    private companion object {
-        const val APK_MIME_TYPE = "application/vnd.android.package-archive"
     }
 }

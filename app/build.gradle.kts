@@ -3,6 +3,13 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+val appVersionCode = 5
+val appVersionName = "0.4.1"
+
+base {
+    archivesName.set("OpenClone-$appVersionName")
+}
+
 android {
     namespace = "dev.bill.openclone"
     compileSdk = 34
@@ -11,8 +18,8 @@ android {
         applicationId = "dev.bill.openclone"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
     }
 
     buildTypes {

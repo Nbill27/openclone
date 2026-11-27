@@ -56,9 +56,10 @@ class CloneConfigTest {
     }
 
     @Test
-    fun `suggestCloneLabel appends the Clone 1 suffix`() {
+    fun `suggestCloneLabel appends matching clone number suffix`() {
         assertEquals("Muse (Clone 1)", suggestCloneLabel("Muse"))
-        assertEquals("BCA mobile (Clone 1)", suggestCloneLabel("BCA mobile"))
+        assertEquals("BCA mobile (Clone 1)", suggestCloneLabel("BCA mobile", 1))
+        assertEquals("Facebook (Clone 2)", suggestCloneLabel("Facebook", 2))
     }
 
     @Test
@@ -81,5 +82,52 @@ class CloneConfigTest {
     @Test
     fun `suggestClonePackage output is itself a valid package name`() {
         assertTrue(isValidPackageName(suggestClonePackage("com.example.app", emptySet())))
+    }
+
+    @Test
+    fun `extractCloneNumber reads clone index from package or label`() {
+        assertEquals(3, extractCloneNumber("com.facebook.katana.clone3", "Facebook"))
+        assertEquals(5, extractCloneNumber("com.custom.pkg", "Facebook (Clone 5)"))
+        assertEquals(2, extractCloneNumber("com.custom.pkg", "Custom", fallback = 2))
+    }
+
+    @Test
+    fun `buildBatchCloneSpecs skips already installed clones and increments cleanly`() {
+        val existing = setOf("com.facebook.katana.clone1", "com.facebook.katana.clone3")
+        val specs = buildBatchCloneSpecs(
+            originalPackage = "com.facebook.katana",
+            originalLabel = "Facebook",
+            customLabelInput = "Facebook",
+            customPackageInput = "com.facebook.katana.clone2",
+            count = 3,
+            existingPackages = existing,
+        )
+        assertEquals(
+            listOf(
+                BatchCloneSpec(2, "Facebook (Clone 2)", "com.facebook.katana.clone2"),
+                BatchCloneSpec(4, "Facebook (Clone 4)", "com.facebook.katana.clone4"),
+                BatchCloneSpec(5, "Facebook (Clone 5)", "com.facebook.katana.clone5"),
+            ),
+            specs,
+        )
+    }
+
+    @Test
+    fun `buildBatchCloneSpecs supports custom base label for multiple clones`() {
+        val specs = buildBatchCloneSpecs(
+            originalPackage = "com.facebook.katana",
+            originalLabel = "Facebook",
+            customLabelInput = "FB Toko",
+            customPackageInput = "com.facebook.katana.clone1",
+            count = 2,
+            existingPackages = emptySet(),
+        )
+        assertEquals(
+            listOf(
+                BatchCloneSpec(1, "FB Toko 1", "com.facebook.katana.clone1"),
+                BatchCloneSpec(2, "FB Toko 2", "com.facebook.katana.clone2"),
+            ),
+            specs,
+        )
     }
 }

@@ -2,22 +2,16 @@ package dev.bill.openclone
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.LruCache
+import java.io.File
 
 /**
- * Lazily loaded, memory-bounded cache of installed-app icons.
- *
- * The list used to carry a [Drawable] per package, which meant every refresh
- * decoded 200+ icons before the first row could be drawn. Now only visible
- * rows ask for an icon.
- *
- * Icons are rasterised once into a small bitmap and cached by byte size, so a
- * phone with hundreds of apps cannot blow up the heap on icon bitmaps: the
- * source drawables (often adaptive icons backed by large images) are never
- * retained.
+ * Lazily loaded, memory-bounded cache of installed-app icons and generated
+ * clone preview icons.
  */
 object AppIcons {
 
@@ -32,34 +26,66 @@ object AppIcons {
     /**
      * Icon for [packageName], rendered at [sizePx] device pixels.
      *
-     * Safe to call from the main thread: after the first row the bitmap comes
-     * from the cache, and a miss only rasterises one small square.
+     * Checks installed packages first, then falls back to the generated clone
+     * icon sidecar (`files/clones/<packageName>.png`) so freshly created clones
+     * show their recolored icon before installation.
      */
     fun load(context: Context, packageName: String, sizePx: Int): Drawable? {
         val px = sizePx.coerceIn(MIN_ICON_PX, MAX_ICON_PX)
         val key = "$packageName@$px"
         cache.get(key)?.let { return BitmapDrawable(context.resources, it) }
 
-        val source = try {
+        val installedSource = try {
             context.packageManager.getApplicationIcon(packageName)
         } catch (_: Exception) {
-            // Uninstalled between the scan and the bind, or a broken resource.
             null
-        } ?: return null
+        }
 
-        val bitmap = try {
-            rasterise(source, px)
-        } catch (_: Exception) {
-            null
+        val bitmap = if (installedSource != null) {
+            try {
+                rasterise(installedSource, px)
+            } catch (_: Exception) {
+                null
+            }
+        } else {
+            loadSidecarBitmap(context, packageName, px)
         } ?: return null
 
         cache.put(key, bitmap)
         return BitmapDrawable(context.resources, bitmap)
     }
 
+    /** Drops cached icons for [packageName] (e.g. when regenerating a clone icon). */
+    fun evict(packageName: String) {
+        val prefix = "$packageName@"
+        cache.snapshot().keys
+            .filter { it.startsWith(prefix) }
+            .forEach { cache.remove(it) }
+    }
+
     /** Drops every cached icon, e.g. after a clone was installed. */
     fun clear() {
         cache.evictAll()
+    }
+
+    fun clonePreviewFile(context: Context, newPackage: String): File =
+        File(File(context.filesDir, "clones"), "$newPackage.png")
+
+    private fun loadSidecarBitmap(context: Context, packageName: String, px: Int): Bitmap? {
+        val file = clonePreviewFile(context, packageName)
+        if (!file.exists()) return null
+        return try {
+            val decoded = BitmapFactory.decodeFile(file.absolutePath) ?: return null
+            if (decoded.width == px && decoded.height == px) {
+                decoded
+            } else {
+                Bitmap.createScaledBitmap(decoded, px, px, true).also {
+                    if (it !== decoded) decoded.recycle()
+                }
+            }
+        } catch (_: Exception) {
+            null
+        }
     }
 
     private fun rasterise(source: Drawable, px: Int): Bitmap {

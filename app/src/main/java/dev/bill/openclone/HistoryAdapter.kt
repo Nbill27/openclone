@@ -11,12 +11,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * One history row: the stored record plus what is currently true about its
- * APK on disk. The file can disappear (cache clear, manual delete) while the
- * record stays, so size and existence travel next to the record instead of
- * being re-read during the bind.
- */
 data class HistoryEntry(
     val record: CloneRecord,
     val fileSize: Long,
@@ -26,12 +20,12 @@ data class HistoryEntry(
 /**
  * Rows for "Riwayat Clone" (DESAIN.md section 4, Layar 5).
  *
- * The row shows the clone's icon, label and "size • date time"; the success
- * badge only appears while the APK still exists. The overflow menu offers
- * share and delete, matching the two actions the spec allows here.
+ * Tapping a row starts installation directly; the overflow menu offers
+ * install, share, and delete.
  */
 class HistoryAdapter(
     private var entries: List<HistoryEntry>,
+    private val onInstall: (HistoryEntry) -> Unit,
     private val onShare: (HistoryEntry) -> Unit,
     private val onDelete: (HistoryEntry) -> Unit,
 ) : RecyclerView.Adapter<HistoryAdapter.ViewHolder>() {
@@ -50,9 +44,6 @@ class HistoryAdapter(
         val record = entry.record
         val context = holder.itemView.context
 
-        // A clone that is installed resolves under newPackage; one that was
-        // never installed still falls back to the source app's icon so the
-        // row does not go blank.
         val iconPx = (ICON_DP * holder.itemView.resources.displayMetrics.density).toInt()
         holder.binding.historyIcon.setImageDrawable(
             AppIcons.load(context, record.newPackage, iconPx)
@@ -72,7 +63,7 @@ class HistoryAdapter(
         holder.binding.historyStatus.visibility =
             if (entry.fileExists) View.VISIBLE else View.GONE
 
-        holder.binding.root.setOnClickListener { onShare(entry) }
+        holder.binding.root.setOnClickListener { onInstall(entry) }
         holder.binding.historyMenu.setOnClickListener { anchor ->
             showMenu(anchor, entry)
         }
@@ -97,11 +88,14 @@ class HistoryAdapter(
 
     private fun showMenu(anchor: View, entry: HistoryEntry) {
         val popup = PopupMenu(anchor.context, anchor)
-        popup.menu.add(0, MENU_SHARE, 0, R.string.history_share)
-        popup.menu.add(0, MENU_DELETE, 1, R.string.history_delete)
+        popup.menu.add(0, MENU_INSTALL, 0, R.string.history_install)
+        popup.menu.add(0, MENU_SHARE, 1, R.string.history_share)
+        popup.menu.add(0, MENU_DELETE, 2, R.string.history_delete)
+        popup.menu.findItem(MENU_INSTALL).isEnabled = entry.fileExists
         popup.menu.findItem(MENU_SHARE).isEnabled = entry.fileExists
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
+                MENU_INSTALL -> onInstall(entry)
                 MENU_SHARE -> onShare(entry)
                 MENU_DELETE -> onDelete(entry)
             }
@@ -110,7 +104,6 @@ class HistoryAdapter(
         popup.show()
     }
 
-    /** One decimal place, Indonesian comma, e.g. "12,6 MB". */
     private fun formatSize(bytes: Long): String {
         val mb = bytes / (1024.0 * 1024.0)
         return if (mb >= 1.0) {
@@ -125,9 +118,9 @@ class HistoryAdapter(
             "$fileExists|$fileSize"
 
     private companion object {
-        /** Matches the 48dp historyIcon in item_history.xml. */
         const val ICON_DP = 48
-        const val MENU_SHARE = 1
-        const val MENU_DELETE = 2
+        const val MENU_INSTALL = 1
+        const val MENU_SHARE = 2
+        const val MENU_DELETE = 3
     }
 }

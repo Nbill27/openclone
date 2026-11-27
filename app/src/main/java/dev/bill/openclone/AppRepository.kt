@@ -132,10 +132,13 @@ class AppRepository(private val context: Context) {
     @Suppress("DEPRECATION")
     fun installedPackageNames(): Set<String> {
         return try {
+            val flags = PackageManager.MATCH_UNINSTALLED_PACKAGES
             val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(0))
+                packageManager.getInstalledPackages(
+                    PackageManager.PackageInfoFlags.of(flags.toLong()),
+                )
             } else {
-                packageManager.getInstalledPackages(0)
+                packageManager.getInstalledPackages(flags)
             }
             packages.mapNotNullTo(HashSet(packages.size)) { it.packageName }
         } catch (_: Exception) {
